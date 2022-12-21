@@ -139,7 +139,7 @@ class DALObject {
                 $row['location_id'] = intval($row['location_id']);
                 $row['row_id'] = intval($row['row_id']);
                 $row['rack_id'] = intval($row['rack_id']);   
-                if ($simple_data || $row['zerou']) {
+                if ($simple_data) {
                     $row['unit_no'] = array();
                     //unset($row['unit_no']);
                     unset($row['atom']);

@@ -60,6 +60,11 @@ class BZObject {
         return $ret;
     }
 
+    public static function setPropertyValue($objId,$attrId,$attrValue) {
+        commitUpdateAttrValue($objId, $attrId, $attrValue);
+        return array(True,'commit Attr('.$attrId.') value');
+    }
+
     //internal call function
     public static function getPropertys($assetId) {
         //echo "parameter: {$type},{$assetId}\n";

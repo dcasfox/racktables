@@ -128,6 +128,19 @@ class Objects {
         return outSuccess($data,count($data));
     }
     
+    public static function setPropertyValue($args) {
+        try {
+            list($success,$data) = BZObject::setPropertyValue($args['object_id'],$args['attr_id'],$args['attr_value']);
+            if ($success) {
+                return outSuccess($data,1);
+            } else {
+                return outFail($data);
+            }
+        } catch (Exception $e) {
+            return outFail(array('error'=>$e->getMessage()));
+        }
+    }
+
     public static function getPropertys($args)
     {   
         list($success,$data) = BZObject::getPropertys($args['asset_id']);

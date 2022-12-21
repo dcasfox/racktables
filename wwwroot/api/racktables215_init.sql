@@ -139,7 +139,7 @@ CREATE TABLE `AttributeValue` (
   `object_id` int(10) unsigned NOT NULL,
   `object_tid` int(10) unsigned NOT NULL DEFAULT 0,
   `attr_id` int(10) unsigned NOT NULL,
-  `string_value` char(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `string_value` MEDIUMTEXT COLLATE utf8_unicode_ci DEFAULT NULL, 
   `uint_value` int(10) unsigned DEFAULT NULL,
   `float_value` float DEFAULT NULL,
   PRIMARY KEY (`object_id`,`attr_id`),
