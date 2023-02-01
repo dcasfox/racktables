@@ -5,10 +5,10 @@ class BZObject {
     static $debug_mode = False;
     //input : lable => object status name
     //output : array()
-    public static function getSummary($label) {        
+    public static function getSummary($label) {
         $_arg = 'Object Status';
         if (! empty($label))
-             $_arg = $label;         
+             $_arg = $label;
         $_output = DALObject::getSummaryObjects($_arg);
         require_once('DALIP.php');
         $_output['IPs'] = DALIP::getSummaryIPs();
@@ -39,7 +39,7 @@ class BZObject {
             $ret['nat4'] = getNATv4ForObject($id);
             $ret['files'] = getFilesOfEntity('object', $id);
 
-            $ret['ips'] = BZObject::common_network_detail($id);                
+            $ret['ips'] = BZObject::common_network_detail($id);
         }
         return $ret;
     }
@@ -113,21 +113,21 @@ class BZObject {
         if (count($tmpIds) == 0) array($check_result," parameter invalid");
 
         $assetIds = "'".implode("','",$tmpIds)."'";
-        $data = DALObject::getObjectRackData('asset',$assetIds);        
+        $data = DALObject::getObjectRackData('asset',$assetIds);
         $objIdArr = array_keys($data);
         if (count($objIdArr)>0) {
             require_once('DALSpace.php');
-            $objIds = "'".implode("','",$objIdArr)."'";            
+            $objIds = "'".implode("','",$objIdArr)."'";
             $objProps = DALObject::getObjectPropertys($objIds,True);
             $ret = array();
-            $locData = DALSpace::getLocationDataAll();            
-            foreach($data as $objId => $objData) {    
+            $locData = DALSpace::getLocationDataAll();
+            foreach($data as $objId => $objData) {
                 $assetId = $objData['assetId'];
-                if (!empty($assetId)) {        
+                if (!empty($assetId)) {
                     //$ret[$assetId] = $objData;
                     //$ret[$assetId] = $objProps[$objId];
                     $ret[$assetId] = array_merge($objData, $objProps[$objId]);
-                    //get location tree data; 
+                    //get location tree data;
                     $ret[$assetId]['locations'] = BZObject::common_location_tree($objData['location_id'],$locData);
                     unset($ret[$assetId]['location_id']);
                     unset($ret[$assetId]['location_name']);
@@ -148,28 +148,28 @@ class BZObject {
             $objtname = NULL;
             $data = $link;
             $objtid = $link['objtype_id'];
-            if (isset($typeData[$objtid])) 
+            if (isset($typeData[$objtid]))
                 $objtname = $typeData[$objtid];
 
             $remotetid = $link['remote_object_tid'];
             $remotetname = NULL;
-            if (isset($typeData[$remotetid])) 
+            if (isset($typeData[$remotetid]))
                 $remotetname = $typeData[$remotetid];
 
-            $objinfo = array();    
+            $objinfo = array();
             $objid = $link['object_id'];
-            if (isset($objData[$objid])) 
+            if (isset($objData[$objid]))
                 $objinfo = $objData[$objid];
 
             unset($objinfo['object_name']);
 
             $remoteinfo = array();
-            $remoteid = $link['remote_object_id'];    
-            if (isset($objData[$remoteid])) 
+            $remoteid = $link['remote_object_id'];
+            if (isset($objData[$remoteid]))
                 $remoteinfo = $objData[$remoteid];
 
             unset($remoteinfo['object_name']);
-            
+
             $newobject = array('id' => intval($objid),
                                 'name' => $link['object_name'],
                                 'host_name' => "",
@@ -187,15 +187,15 @@ class BZObject {
                                 'type_name' => $objtname);
 
             if (isset($assetIdsData[$objid]))
-                $newobject['asset_id'] = $assetIdsData[$objid];    
+                $newobject['asset_id'] = $assetIdsData[$objid];
 
             $data['object'] = array_merge($newobject, $objinfo);
 
             $newremote_object = array('id' => intval($remoteid),
-                                      'name' => $link['remote_object_name'],  
+                                      'name' => $link['remote_object_name'],
                                       'host_name' => "",
                                       'host_id' => "",
-                                      'asset_id' => NULL,                                        
+                                      'asset_id' => NULL,
                                       'type_id' => intval($link['remote_object_tid']),
                                       'label' => NULL,
                                       'location_id' => NULL,
@@ -206,13 +206,13 @@ class BZObject {
                                       'row_name' => "",
                                       'units' => array(),
                                       'type_name' => $remotetname);
-                                    
-            if (isset($assetIdsData[$remoteid])) 
-                $newremote_object['asset_id'] = $assetIdsData[$remoteid]; 
+
+            if (isset($assetIdsData[$remoteid]))
+                $newremote_object['asset_id'] = $assetIdsData[$remoteid];
 
 
             $data['remote_object'] = array_merge($newremote_object,  $remoteinfo);
-            
+
             $data['ip4'] = NULL;
             unset($data['object_id']);
             unset($data['object_name']);
@@ -269,35 +269,35 @@ class BZObject {
             //echo "getLinkData after\n";
             $index = 0;
             $allObjectIds[] =  $object_id;
-            //echo "local:".$object_id. "\n";     
+            //echo "local:".$object_id. "\n";
 
             foreach($linkData as $link) {
                 $tid = intval($link['objtype_id']);
-                if (! in_array($tid,$objectTypes)) 
+                if (! in_array($tid,$objectTypes))
                     $objectTypes[] = $link['objtype_id'];
 
-                $tid = intval($link['remote_object_tid']);            
-                if (! in_array($tid,$objectTypes))    
+                $tid = intval($link['remote_object_tid']);
+                if (! in_array($tid,$objectTypes))
                     $objectTypes[] = $tid;
 
                 $oid = $link['object_id'];
-                if (! in_array($oid,$ObjectIds)) 
-                    $ObjectIds[] = $oid;
-                
-                $oid = $link['remote_object_id'];
-                if (! in_array($oid,$ObjectIds)) 
+                if (! in_array($oid,$ObjectIds))
                     $ObjectIds[] = $oid;
 
-                $allObjectIds[] = $link['object_id'];     
+                $oid = $link['remote_object_id'];
+                if (! in_array($oid,$ObjectIds))
+                    $ObjectIds[] = $oid;
+
+                $allObjectIds[] = $link['object_id'];
                 $allObjectIds[] = $link['remote_object_id'];
-               // echo "object_id:". $link['object_id']. "\n";  
-                //echo "remote_object_id:".$link['remote_object_id']. "\n";     
+               // echo "object_id:". $link['object_id']. "\n";
+                //echo "remote_object_id:".$link['remote_object_id']. "\n";
 
             }
 
             //echo "getTopologyByAssetId init before\n";
             $info = spotEntity ('object', $object_id);
-            amplifyCell ($info);            
+            amplifyCell ($info);
             $ret['name'] = $info['name'];
             $ret['label'] = $info['label'];
             $ret['type_id'] = intval($info['objtype_id']);
@@ -305,15 +305,15 @@ class BZObject {
             //echo "getParents before\n";
             $parents = getParents ($info, 'object');
            // echo "getParents after\n";
-            $children = getChildren ($info, 'object');            
+            $children = getChildren ($info, 'object');
             //print_r($children);
             // lookup the human-readable object type, sort by it
             foreach ($parents as $parent_id => $parent) {
                 $parents[$parent_id]['object_type'] = decodeObjectType ($parent['objtype_id']);
                 $objectTypes[] = $parent['objtype_id'];
                 $ObjectIds[] = $parent['id'];
-                $allObjectIds[] = $parent['id'];           
-               // echo "parent:". $parent['id']. "\n";     
+                $allObjectIds[] = $parent['id'];
+               // echo "parent:". $parent['id']. "\n";
             }
 
             foreach ($children as $children_id => $child) {
@@ -380,10 +380,10 @@ class BZObject {
                                   'label' => $parent['label'],
                                   'asset_id' => NULL,
                                   'type_id' => intval($objtype_id),
-                                  'rack_id' => intval($parent['rack_id']),   
-                                  'host_name' => "",                                  
-                                  'host_id' => "",  
-                                  'ports' => array(),                                                                                                 
+                                  'rack_id' => intval($parent['rack_id']),
+                                  'host_name' => "",
+                                  'host_id' => "",
+                                  'ports' => array(),
                                   'rack_name' => "",                 //default
                                   'units' => array());               //default
                     if (isset($assetIdsData[$oid]))
@@ -395,9 +395,9 @@ class BZObject {
                     }
 
                     unset($temp_data['object_name']);
-                    if (isset($objData[$oid])) 
+                    if (isset($objData[$oid]))
                         $fmt_parents[decodeObjectType ($objtype_id)][] = array_merge($temp_data, $objData[$oid]);
-                    else 
+                    else
                         $fmt_parents[decodeObjectType ($objtype_id)][] = $temp_data;
                 }
                 $ret['parents'] = $fmt_parents;
@@ -416,13 +416,13 @@ class BZObject {
                                        'rack_id' => intval($child['rack_id']),
                                        'asset_id' => NULL,
                                        'host_name' => "",
-                                       'host_id' => "",    
+                                       'host_id' => "",
                                        'ports' => array(),
                                        'rack_name' => "",                 //default
                                        'units' => array());               //default
                     if (isset($assetIdsData[$oid]))
-                        $temp_data['asset_id'] = $assetIdsData[$oid];          
-                    
+                        $temp_data['asset_id'] = $assetIdsData[$oid];
+
                     if (!empty($oid)) {
                         $childLinkData = DALObject::getLinkData($oid);
                         $temp_data['ports'] = BZObject::getPortLinks($childLinkData,$objData,$typeData,$assetIdsData);
@@ -431,9 +431,9 @@ class BZObject {
                     unset($temp_data['object_name']);
                     if (isset($objData[$oid]))
                         $fmt_parents[] = array_merge($temp_data, $objData[$oid]);
-                    else                              
+                    else
                         $fmt_children[] = $temp_data;
-                }    
+                }
                 $ret['children'][decodeObjectType ($objtype_id)] = $fmt_children;
             }
             $check_result = True;
@@ -464,20 +464,20 @@ class BZObject {
                         $delIndx[] = $index;
                         continue;
                     }
-                    
+
                     $id = intval($prop['id']);
                     $prop['is_multiple'] = False;
                     if (count($prop['v']) > 1 ) {
-                        $prop['is_multiple'] = True;                        
-                    } else 
+                        $prop['is_multiple'] = True;
+                    } else
                         $prop['v'] = $prop['v'][0];
                     $prop_map[$id] = $index;
                     $index++;
                 }
 
                 if (count($delIndx) > 0 )
-                    foreach ($delIndx as $index) 
-                        unset($filter['property'][$index]);            
+                    foreach ($delIndx as $index)
+                        unset($filter['property'][$index]);
 
                 if (count($filter['property'])>0) {
 
@@ -502,12 +502,12 @@ class BZObject {
                             $value_type = 'uint_value';
                         } elseif ($type == 'float') {
                             $value_type = 'float_value';
-                        } elseif ($type == 'date') {    
+                        } elseif ($type == 'date') {
                             $value_type = 'uint_value';
                         }
 
                         $id = intval($attr_id);
-                        if (isset($prop_map[$id])) {               
+                        if (isset($prop_map[$id])) {
                             $index = $prop_map[$id];
                             $filter['property'][$index]['id'] = $attr_id;
                             $filter['property'][$index]['value_type'] = $value_type;
@@ -523,21 +523,21 @@ class BZObject {
         if (! empty($sort)) {
             if (is_string($sort))
                 $sort = json_decode($sort,True);
-            
-            if (isset($sort['id'])) {                
+
+            if (isset($sort['id'])) {
                 $sort['system'] = False;
                 //print_r($sort);
                 //echo gettype($sort['id']);
                 if (is_numeric($sort['id'])) {
                     $sort['id'] = intval($sort['id']);
-                } else {                
+                } else {
                     if ($sort['id'] == 'hardware_type')
                         $sort['id'] = 2;
                     elseif ($sort['id'] == 'asset_tag')
                         $sort['id'] = 'asset_no';
                     $sort['system'] = True;
                 }
-            } else 
+            } else
                 $sort = NULL;
         }
         //return array(True, 0,array());
@@ -559,7 +559,7 @@ class BZObject {
                                 'row_name' => NULL,
                                 'rack_id' => NULL,
                                 'rack_name' => NULL,
-                                'units' => NULL);  
+                                'units' => NULL);
 
             $empty_attrs = array('tags' => NULL,
                                  'property' => NULL,
@@ -578,17 +578,17 @@ class BZObject {
 
                 if (isset($obj_rack[$id]))
                     $obj = array_merge($obj,$obj_rack[$id]);
-                else 
+                else
                     $obj = array_merge($obj,$empty_rack);
 
                if (isset($obj_container[$id]))
                     $obj['container'] = $obj_container[$id];
-                else 
-                    $obj['container']  = array();                    
+                else
+                    $obj['container']  = array();
                 $obj['locations'] = BZObject::common_location_tree($obj['location_id'],$locData);
                 $obj['objtype_id'] = intval($obj['objtype_id']);
                 unset($obj['location_id']);
-                unset($obj['location_name']);   
+                unset($obj['location_name']);
                 $ret[] = $obj;
             }
         }
@@ -596,7 +596,7 @@ class BZObject {
         return array(True, $total,$ret);
     }
 
-    public static function get_objtype_columns($objtype_id,$objtype_namelist) {       
+    public static function get_objtype_columns($objtype_id,$objtype_namelist) {
         $is_id = True;
         if (empty($objtype_id)) {
             if (empty($objtype_namelist)) {
@@ -606,38 +606,38 @@ class BZObject {
                 $objtype  = "'".implode("','",$templist)."'";
                 $is_id = False;
             }
-        } else 
+        } else
              $objtype = $objtype_id;
         return DALObject::getObjtypeColumns($objtype,$is_id);
     }
 
-    public static function get_common_attribues() {         
+    public static function get_common_attribues() {
         return DALObject::getAttributeInfo();
     }
-    
+
     //internal call function
-    public static function common_network_detail($id) {        
+    public static function common_network_detail($id) {
         $ret = array();
         $ipa = array();
         $allocs_by_iface = array();
         $ipa['ipv4'] = getObjectIPv4Allocations($id);
-        $ipa['ipv6'] = getObjectIPv6Allocations($id);    
+        $ipa['ipv6'] = getObjectIPv6Allocations($id);
         foreach (array ('ipv4', 'ipv6') as $ip_v)
-        {                
+        {
             foreach ($ipa[$ip_v] as $ip_bin => $alloc) {
-                $allocs_by_iface[$alloc['osif']][$ip_bin] = $alloc;            
+                $allocs_by_iface[$alloc['osif']][$ip_bin] = $alloc;
             }
         }
-        
+
         $ret = array();
-        
+
         if (empty($allocs_by_iface)) return $ret;
 
         foreach (sortPortList ($allocs_by_iface) as $iface_name => $alloclist)
         {
-            $is_first_row = TRUE;                                    
+            $is_first_row = TRUE;
             foreach ($alloclist as $alloc)
-            {               
+            {
                 $entity = array();
                 $entity['osif'] = $iface_name;
                 $entity['type'] = $alloc['type'];
@@ -649,7 +649,7 @@ class BZObject {
 
                 $reserved = "";
                 if (isset($alloc['reserved']))
-                        $reserved = $alloc['comment'];                        
+                        $reserved = $alloc['comment'];
                 $entity['reserved'] = $reserved;
                 $ip_bin = $alloc['addrinfo']['ip_bin'];
                 $network = spotNetworkByIP($ip_bin);
@@ -661,30 +661,30 @@ class BZObject {
                 $entity['network']['comment'] = $network['comment'];
                 $entity['network']['ip'] = $network['ip'];
                 $entity['network']['mask'] = $network['mask'];
-                                    
+
                 $other_routers = array();
                 $entity['network']['routed_by'] = "";
                 if ($display_routers = (getConfigVar ('IPV4_TREE_RTR_AS_CELL') != 'none')) {
                     foreach (findNetRouters ($network) as $router)
                         if ($router['id'] != $object_id)
                             $other_routers[] = $router;
-                    if (count ($other_routers)) 
+                    if (count ($other_routers))
                         $entity['network']['routed_by'] = getOutputOf ('printRoutersTD', $other_routers, $display_routers);
 
                 }
-                    
+
                 $ret[] = $entity;
-            }                        
+            }
         }
         return $ret;
     }
 
     //internal call function
     public static function common_containers_detail($id,$obj_info) {
-        
+
         $ret = array();
         if (!empty($id)) {
-            
+
             if (empty($obj_info)) {
 
                 $obj_info = spotEntity ('object', $id);
@@ -693,25 +693,25 @@ class BZObject {
 
             //print_r($obj_info);
             $parents = getParents ($obj_info, 'object');
-            $children = getChildren ($obj_info, 'object');            
+            $children = getChildren ($obj_info, 'object');
             //print_r($children);
             // lookup the human-readable object type, sort by it
             $allObjectIds = array();
 
             foreach ($parents as $parent_id => $parent) {
                 $parents[$parent_id]['object_type'] = decodeObjectType ($parent['objtype_id']);
-                $allObjectIds[] = $parent['id'];       
+                $allObjectIds[] = $parent['id'];
             }
 
             foreach ($children as $children_id => $child) {
                 $allObjectIds[] = $child['id'];
-            }            
+            }
 
             $asset_keys = array();
             if (count($allObjectIds)>0) {
-                
+
                 $allObjectIds = array_unique($allObjectIds);
-                $allObjectIds = array_filter($allObjectIds);                
+                $allObjectIds = array_filter($allObjectIds);
                 $ids = implode(",",$allObjectIds);
                 //echo $ids . "\n";
                 $assetIdsData = DALObject::getAssetIdByObject($ids,False);
@@ -725,7 +725,7 @@ class BZObject {
             ksort ($grouped_parents);
             $ret['parents'] = array();
             foreach ($grouped_parents as $parents_group)
-            {    
+            {
                 uasort ($parents_group, 'compare_name');
                 $fmt_parents = array();
                 foreach ($parents_group as $parent) {
@@ -736,11 +736,11 @@ class BZObject {
                                 'label' => $parent['label'],
                                 'asset_id' => NULL,
                                 'type_id' => $parent['objtype_id'],
-                                'rack_id' => $parent['rack_id'],   
-                                'host_name' => "", 
+                                'rack_id' => $parent['rack_id'],
+                                'host_name' => "",
                                 'host_id' => "");               //default
                     if (isset($assetIdsData[$oid]))
-                        $temp_data['asset_id'] = $assetIdsData[$oid];    
+                        $temp_data['asset_id'] = $assetIdsData[$oid];
 
                     $fmt_parents[decodeObjectType ($objtype_id)][] = $temp_data;
                 }
@@ -763,10 +763,10 @@ class BZObject {
                                     'host_name' => "",
                                     'host_id' => "");               //default
                     if (isset($assetIdsData[$oid]))
-                        $temp_data['asset_id'] = $assetIdsData[$oid];    
+                        $temp_data['asset_id'] = $assetIdsData[$oid];
 
                     $fmt_children[] = $temp_data;
-                }    
+                }
                 $ret['children'][decodeObjectType ($objtype_id)] = $fmt_children;
             }
         }
@@ -776,7 +776,7 @@ class BZObject {
     //internal call function
     public static function common_location_tree($cid,$locData=NULL) {
         $locations = array();
-         
+
         if (! empty($cid)) {
             if (empty($locData)) {
                 //echo "load Space data\n";
@@ -789,12 +789,12 @@ class BZObject {
             while(true) {
                 if ($index_level>$loop_level || empty($cid))
                     break;
-                $pid = $locData[$cid]['parent_id'];     
-                $locationData[$cid ] = array('id'=> intval($cid),'name' => $locData[$cid]['name']);
+                $pid = $locData[$cid]['parent_id'];
+                $locationData[$cid ] = array('id'=> intval($cid),'name' => htmlspecialchars_decode($locData[$cid]['name']));
                 $cid = $pid;
                 $index_level++;
             }
-            $locations = array_reverse($locationData);            
+            $locations = array_reverse($locationData);
         }
         return $locations;
     }
@@ -804,7 +804,7 @@ class BZObject {
         $obj_id = intval($id);
         $obj_atts = DALObject::getObjectPropertys($obj_id);
         if (! empty($obj_atts)) {
-            require_once('DALSpace.php');            
+            require_once('DALSpace.php');
             $obj_rack = DALSpace::getRackMoleculeByObjectIds($obj_id,True);
             //print_r($obj_rack);
             $obj = $obj_atts[0];
@@ -814,12 +814,12 @@ class BZObject {
                                 'row_name' => NULL,
                                 'rack_id' => NULL,
                                 'rack_name' => NULL,
-                                'units' => NULL);  
+                                'units' => NULL);
             if (isset($obj_rack[$id]))
                 $obj = array_merge($obj,$obj_rack[$id]);
-            else 
+            else
                 $obj = array_merge($obj,$empty_rack);
-            
+
             $info = spotEntity ('object', $id);
             amplifyCell ($info);
 
@@ -828,7 +828,7 @@ class BZObject {
 
             //print_r($info);
             $obj['objtype_id'] = intval($info['objtype_id']);
-            if (! empty($info)) {           
+            if (! empty($info)) {
                 $containers = BZObject::common_containers_detail($obj_id,$info);
                 //print_r($containers);
                 if (!empty($containers)) {
@@ -859,18 +859,18 @@ class BZObject {
             $arrIds = array_filter($arrIds);
             $ids = implode(",",$arrIds);
             //echo $ids;
-            $dict_map = DALObject::getObjectAttrsDict($ids,True);            
-        
+            $dict_map = DALObject::getObjectAttrsDict($ids,True);
+
             foreach ($data['dicts'] as $chapter_id => $attr_id) {
-                if (isset($data['attributes'][$attr_id])) {            
+                if (isset($data['attributes'][$attr_id])) {
                     $data['attributes'][$attr_id]['items'] = (isset($dict_map[$chapter_id]))? $dict_map[$chapter_id] : NULL;
                 }
-            }            
-        }        
+            }
+        }
         $ret = array_values($data['attributes']);
-        
+
         return array(True, array_values($ret));
-        
+
     }
 
     public static function get_object_attrvalues($attr_id) {
@@ -879,14 +879,14 @@ class BZObject {
         $ret = array();
         $ret = DALObject::getAttrValueList(intval($attr_id));
         return array(True, $ret);
-       
+
     }
 
-    public static function get_objtype_list($hwtype_ids) {     
+    public static function get_objtype_list($hwtype_ids) {
         list($check,$resp) = verifyIntegerArrary($hwtype_ids);
         if ($check) {
             $data = DALObject::getObjectTypeList($resp);
-        } else 
+        } else
             $data = $resp;
         return array(True, $data);
     }
@@ -894,7 +894,7 @@ class BZObject {
     public static function get_hardware_type($objtype_ids) {
         if (strpos($objtype_ids, ',') !== False )
             $objtype_ids = explode(",",$objtype_ids);
-        elseif ($objtype_ids == 'null') 
+        elseif ($objtype_ids == 'null')
             $objtype_ids = NULL;
 
         $data = DALObject::getHardwareType($objtype_ids);
@@ -908,10 +908,10 @@ class BZObject {
             return array(False,'object type empty');
         }
     }
-  
+
     public static function get_objtype_hwlist($objtype_namelist) {
         $templist = explode(",",$objtype_namelist);
-        $objtype  = "'".implode("','",$templist)."'";        
+        $objtype  = "'".implode("','",$templist)."'";
         $ret = DALObject::getHardwareTypeByObjType($objtype);
         return array(True,$ret);
     }
@@ -922,7 +922,7 @@ class BZObject {
             $templist = explode(",",$objtype_ids);
             $objtype  = "'".implode("','",$templist)."'";
         }
-        
+
         $attr_name_list = NULL;
         if (! empty($name_list)) {
             $templist = explode(",",$name_list);
@@ -934,10 +934,10 @@ class BZObject {
 
     public static function getCommonNameByName($objtype_list,$name_list){
         $templist = explode(",",$objtype_list);
-        $objtypes  = "'".implode("','",$templist)."'";     
-        
+        $objtypes  = "'".implode("','",$templist)."'";
+
         $templist = explode(",",$name_list);
-        $commnames  = "'".implode("','",$templist)."'";   
+        $commnames  = "'".implode("','",$templist)."'";
         $ret = DALObject::getCommonNameByName($objtypes,$commnames);
         return array(True,$ret);
     }
@@ -964,10 +964,10 @@ class BZObject {
         } else if (! is_numeric($data['hardware_type_id'])) {
             $check_result = False;
             $err_message[] = array('field'=>'hardware_type', 'msg'=>"object \"hardware_type\" invalid");
-        } 
+        }
 
         if ($is_create) {
-            // check Common name column Uniqueness        
+            // check Common name column Uniqueness
             if (DALObject::checkObjectColunmExists('name',$data['name'])){
                 $check_result = False;
                 $err_message[] = array('field'=>'name', 'msg'=>"object \"name\" already exists in system");
@@ -1004,7 +1004,7 @@ class BZObject {
                     $attr_value = $property['value'];
                     if ($type == 'dict') {
                         $attr_value = intval($attr_value);
-                        $chapter_id = $objectAttr[$attr_id]['chapter_id'];                
+                        $chapter_id = $objectAttr[$attr_id]['chapter_id'];
                         $chapter_data = readChapter ($chapter_id, $style = '');
                         if (! empty($chapter_data)) {
                             if (! isset($chapter_data[$attr_value])){
@@ -1018,7 +1018,7 @@ class BZObject {
                             $err_message[] = array('field'=>$field_name, 'msg'=>"Invalid \"{$field_name}\" field format(numeric)");
                             continue;
                         }
-    
+
                         if ($type == 'float') {
                             if (! is_float($attr_value)) {
                                 $check_result  = False;
@@ -1035,17 +1035,17 @@ class BZObject {
                         }
                     } else {
                         $value_len =strlen($attr_value);
-                        if ($value_len > 255) {
+                        /*if ($value_len > 255) {
                             $check_result  = False;
                             $err_message[] = array('field'=>$field_name, 'msg'=>"\"{$field_name}\" length is too big");
                             continue;
-                        }
-                    }          
+                            }*/
+                    }
                 } else {
                     $err_message[] = array('field'=>$field_name, 'msg'=>"attribue \"{$field_name}\" can't access ");
                 }
             }
-        }    
+        }
         return array($check_result,$field_name);
     }
 
@@ -1058,7 +1058,7 @@ class BZObject {
         echo json_encode($loc_list);
         //print_r($loc_list);
         if (count($loc_list) > 1){
-            foreach ($data['locations'] as $loc_data) {        
+            foreach ($data['locations'] as $loc_data) {
                 $id = strval($loc_data['id']);
                 if ($location_id == $id) continue; // avoid first recrod
                 if (! in_array($id,$loc_list)) {
@@ -1078,13 +1078,13 @@ class BZObject {
         require_once('DALSpace.php');
         if (DALSpace::checkLocationExists($location_id))
             $check_position = True;
-        else 
+        else
             $err_message = array('field'=>'location', 'msg'=>'location invalid');
 
         $field_name = NULL;
         if ($check_position) {
             $is_create = ($object_id == 0)? True : False;
-            if (is_numeric($location_id)) { 
+            if (is_numeric($location_id)) {
                 $row_list = getRows($location_id);
                 //echo json_encode($row_list). "\n";
                 $row_id =  strval($row_id);
@@ -1093,7 +1093,7 @@ class BZObject {
                     $rack_list = getRacks ($row_id);
                     //echo json_encode($rack_list). "\n";
                     $rack_id = strval($rack_id);
-                    if (isset($rack_list[$rack_id])) {                        
+                    if (isset($rack_list[$rack_id])) {
                         if (empty($units) == False) {
                             $field_name = "rack u";
                             $racku_data = spotEntity ('rack', intval($rack_id));
@@ -1111,34 +1111,34 @@ class BZObject {
                             //echo "update object id: {$object_id} \n";
                             // echo "dest units:" . json_encode($units). "\n";
                             $dict_used = array();
-                            foreach ($units as $unit_no => $unit_atom) {                     
+                            foreach ($units as $unit_no => $unit_atom) {
                                 $u_id = strval($unit_no);
                                 $poscheck = True;
                                 //echo "dest racku_data:" .json_encode($racku_data[$u_id]) . "\n";
                                 if (isset($racku_data[$u_id])) {
                                     foreach (array ('F', 'I', 'R') as $pos) {
-                                        $pos_index = 2;                                    
+                                        $pos_index = 2;
                                         if ($pos == 'F') {
                                             $atom = 'front';
                                             $pos_index = 0;
-                                        } elseif ($pos == 'I') { 
+                                        } elseif ($pos == 'I') {
                                             $atom = 'interior';
                                             $pos_index = 1;
                                         } else {
                                             $atom = 'rear';
-                                            $pos_index = 2; 
+                                            $pos_index = 2;
                                         }
                                         $ustate = $racku_data[$u_id][$pos_index]['state'];
                                         //echo "no:{$unit_no} pos:{$pos} state {$ustate} \n";
                                         if ( $is_create) {
                                             // create condition
                                             if ($unit_atom[$pos] && $ustate != "F") {
-                                                $poscheck = False;     
+                                                $poscheck = False;
                                                 $err_message[] = array('field'=>$field_name, 'msg'=>"create rack:{$rack_id} u:{$unit_no} atom:{$atom} cannot mount here");
                                             } else {
                                                 $dict_used[$u_id][$pos_index]['state'] = "T";
                                             }
-                                                                            
+
                                         } else {
                                             // update condition
                                             if ($unit_atom[$pos] && ($ustate != "F")) {
@@ -1148,11 +1148,11 @@ class BZObject {
                                                     if ($object_id != $used_objid) {
                                                         $err_message[] = array('field'=>$field_name, 'msg'=>"update rack:{$rack_id} u:{$unit_no} position:{$atom} invalid");
                                                         //echo json_encode($err_message);
-                                                        $poscheck = False;    
+                                                        $poscheck = False;
                                                     }
                                                 } else {
                                                     $err_message[] = array('field'=>$field_name, 'msg'=>"update rack:{$rack_id} u:{$unit_no} position:{$atom} invalid");
-                                                    $poscheck = False; 
+                                                    $poscheck = False;
                                                 }
                                             }
                                         }
@@ -1162,27 +1162,27 @@ class BZObject {
                                     $err_message[] = array('field'=>'rack', 'msg'=>'rack u invalid');
                                     $ucheck = False;
                                 }
-                                
+
                                 if ($poscheck==False) {
                                     $ucheck = False;
                                     break;
-                                }   
+                                }
                                 //echo "poscheck:" . json_encode($poscheck);
                                 //echo "ucheck:" . json_encode($ucheck);
                             }
 
-                            if ($ucheck) {                            
+                            if ($ucheck) {
                                 $check_position = True;
-                            } else 
+                            } else
                                 $check_position = False;
                         } else {
                             if ($zerou) {
-                                if ($object_id != 0) {                                    
+                                if ($object_id != 0) {
                                     require_once('DALSpace.php');
-                                    //物件存在zerou就非新建                               
+                                    //物件存在zerou就非新建
                                     $is_create = (DALSpace::checkZerouObjectExists($object_id))? False : True;
                                 }
-                                $check_position = True;                                                             
+                                $check_position = True;
                             } else {
                                 $check_position = False;
                                 $err_message[] = array('field'=>'rack u', 'msg'=>'rack u empty');
@@ -1192,8 +1192,8 @@ class BZObject {
                         $check_position = False;
                         $err_message[] = array('field'=>'rack', 'msg'=>'rack invalid');
                     }
-                } else {         
-                    $check_position = False;     
+                } else {
+                    $check_position = False;
                     $err_message[] = array('field'=>'row', 'msg'=>'row invalid');
                 }
             }
@@ -1201,7 +1201,7 @@ class BZObject {
         $has_position=($check_position)? True: False;
         if ($object_id == 0)
             return array($has_position,$err_message);
-        else 
+        else
             return array($has_position,$is_create,$err_message);
 
     }
@@ -1216,7 +1216,7 @@ class BZObject {
             $verfity_common_name = False;
             $flag = 'updated';
         }
-        
+
         $row_index = (isset($data['row_index']))? $data['row_index'] : $index;
         $row_objtype = (isset($data['row_objtype']))? $data['row_objtype'] : decodeObjectType($data['objtype_id']);
         $row_name = $data['name'];
@@ -1224,23 +1224,23 @@ class BZObject {
         $result = array('objtype'=> $row_objtype,'row'=>$row_index,'name'=>$row_name,'id'=> $object_id, $flag=> $check_result, 'error' => array());
 
         //符合 ui 顯示一致性
-        if ($object_id != 0) 
+        if ($object_id != 0)
             $result['ignore'] = False;
 
         list($state,$err_data) = BZObject::common_verify_system_field($data,$verfity_common_name);
         if ($state == False) {
-            $result[$flag] = false;   
+            $result[$flag] = false;
             $result['error'] = array_merge($result['error'],$err_data);
             $check_result  = False;
         }
-        // check attribute (common + object type)        
+        // check attribute (common + object type)
         list($state,$err_data) = BZObject::common_verify_field(intval($data['objtype_id']),$data['property']);
-        // make error message 
+        // make error message
         if ($state == False) {
-            $result[$flag] = False;   
+            $result[$flag] = False;
             $result['error'] = array_merge($result['error'],$err_data);
             $check_result  = False;
-        } 
+        }
 
         // check position (common + object type)
         $location_id = $data['location_id'];
@@ -1259,11 +1259,11 @@ class BZObject {
             elseif ((empty($rack_units)) && (! $rack_zerou)) //empty
                 $result['error'][] = array('field'=>'position', 'msg'=>'please assign the asset to a specific rack unit or to Zero-U');
             else {
-               
+
                 if (preg_match('!^[1-9][0-9]*$!', $location_id) && preg_match('!^[1-9][0-9]*$!', $row_id) &&  preg_match('!^[1-9][0-9]*$!', $rack_id)){
                     if ($object_id == 0) //create
                         list($has_position,$err_data) = BZObject::common_verify_position($location_id,$row_id,$rack_id,$rack_zerou,$rack_units);
-                    else //update 
+                    else //update
                         list($has_position,$pos_create,$err_data) = BZObject::common_verify_position($location_id,$row_id,$rack_id,$rack_zerou,$rack_units,intval($object_id));
 
                     if (count($err_data)>0){
@@ -1278,12 +1278,12 @@ class BZObject {
 
             if ($has_position == False) {
                 $result[$flag] = False;
-                //$result[$index]['error'] = array_merge($result[$index]['error'],$err_data);                
+                //$result[$index]['error'] = array_merge($result[$index]['error'],$err_data);
                 $check_result  = False; // position
-            } 
+            }
         } else {
-            //handle position exists =>  null 
-            //if ($object_id == 0) {          
+            //handle position exists =>  null
+            //if ($object_id == 0) {
             if (! empty($location_id)) {
                 if (empty($row_id)) $result['error'][] = array('field'=>'row', 'msg'=>'row empty');
                 if (empty($rack_id)) $result['error'][] = array('field'=>'rack', 'msg'=>'rack empty');
@@ -1297,7 +1297,7 @@ class BZObject {
             }
             //}
         }
-        $ret = array($check_result,$has_position,$pos_create,$result);    
+        $ret = array($check_result,$has_position,$pos_create,$result);
         //if ($object_id == 6533)
         //    echo json_encode($data)."\n";
         //echo json_encode($ret)."\n";
@@ -1310,12 +1310,12 @@ class BZObject {
         //print_r($json_data);
         $ret = array();
         $index = 0;
-        if ($json_data) {                   
+        if ($json_data) {
             foreach ($json_data as $data) {
                 //print_r($data);
-                list($check_result,$has_position,$pos_create,$result) = BZObject::common_check_object($index,$data,0);                
+                list($check_result,$has_position,$pos_create,$result) = BZObject::common_check_object($index,$data,0);
                 //print_r($result);
-                $ret = array_merge($ret,array_values($result));             
+                $ret = array_merge($ret,array_values($result));
                 $index++;
             }
         }
@@ -1327,7 +1327,7 @@ class BZObject {
 
         if (isset($data['comment'])) unset($data['comment']);
         if (isset($data['row_objtype'])) unset($data['row_objtype']);
-        if (isset($data['row_index'])) unset($data['row_index']); 
+        if (isset($data['row_index'])) unset($data['row_index']);
 
         //print_r($data['property']);
         $propertys = array();
@@ -1340,16 +1340,16 @@ class BZObject {
                             $value = $prop['dict_id'];
                         $propertys[] = array("id"=>intval($prop['id']),"value"=>strval($value));
                     }
-                                         
-                } else 
-                    $propertys[] = array("id"=>intval($item['id']),"value"=>strval($item['value']));    
+
+                } else
+                    $propertys[] = array("id"=>intval($item['id']),"value"=>strval($item['value']));
             }
-            
+
             usort($propertys, function($a, $b)
             {
                 return ($a['id'] > $b['id']);
             });
-        }     
+        }
 
         $tags = array();
         if (! empty($data['tags'])) {
@@ -1364,12 +1364,12 @@ class BZObject {
         }
 
         if (empty($data['units']))
-            $data['units'] = array();  
+            $data['units'] = array();
         else {
             ksort($data['units']);
         }
 
-        return array('id'=>intval($data['id']), 
+        return array('id'=>intval($data['id']),
                      'name'=> $data['name'],
                      'label'=> $data['label'],
                      'objtype_id'=> intval($data['objtype_id']),
@@ -1380,9 +1380,9 @@ class BZObject {
                      'rack_id'=> intval($data['rack_id']),
                      'tags'=> $tags,
                      'property'=> $propertys,
-                     'units'=> $data['units'],  
+                     'units'=> $data['units'],
                      'zerou'=>isset($data['zerou'])?$data['zerou']:False);
-        
+
     }
 
     //internal call function
@@ -1394,26 +1394,26 @@ class BZObject {
         $is_extend_attr = False;
         $new_data = BZObject::common_check_object_format($new_data,$is_extend_attr);
 
-        $ids = array_flip(array_column($new_data['property'], 'id'));                    
+        $ids = array_flip(array_column($new_data['property'], 'id'));
         //echo json_encode($ids) . "\n";
         $propertys = array();
         foreach ($rawInfo['property'] as $prop) {
             $id = strval($prop['id']);
-            if (isset($ids[$id])) 
+            if (isset($ids[$id]))
                 $propertys[] = $prop;
-            
+
         }
         //echo json_encode($propertys) . "\n";
         usort($propertys, function($a, $b)
         {
             return ($a['id'] > $b['id']);
         });
-        $rawInfo['property'] =$propertys;        
+        $rawInfo['property'] =$propertys;
 
         $check_equal = False;
         ksort($rawInfo);
         ksort($new_data);
-        $arr1 =json_encode($rawInfo);                    
+        $arr1 =json_encode($rawInfo);
         $arr2 =json_encode($new_data);
         if ($arr1 == $arr2) {
             $check_equal = True;
@@ -1427,17 +1427,17 @@ class BZObject {
         return $check_equal;
     }
 
-    public static function create_procedure($content) {        
+    public static function create_procedure($content) {
         $index = 0;
         $json_data = json_decode($content,True);
         $ret = array();
         if ($json_data) {
             foreach ($json_data as $data) {
-                // create object process   
-                //print_r($data);           
+                // create object process
+                //print_r($data);
                 $row_index = (isset($data['row_index']))? $data['row_index'] : $index;
                 list($check_result,$has_position,$pos_create,$result) = BZObject::common_check_object($row_index,$data,0);
-                //return array(True,array('has_position'=>$has_position,'result'=>$result));      
+                //return array(True,array('has_position'=>$has_position,'result'=>$result));
                 //continue;
                 $object_id = NULL;
                 if ($check_result) {
@@ -1445,18 +1445,18 @@ class BZObject {
                     {
                         $object_id = BZObject::create_object($has_position,$data);
                         $result['id'] = $object_id;
-                        if(empty($object_id))  {    
-                            $result[$flag] = False;   
+                        if(empty($object_id))  {
+                            $result[$flag] = False;
                             $result['objtype'] = (isset($data['row_objtype']))? $data['row_objtype'] : decodeObjectType($data['objtype_id']);
                             $result['row'] = $row_index;
                             $result['error'][] = array('field'=>NULL, 'msg'=> 'create object fail');
-                        }             
+                        }
                     }catch (Exception $e)
                     {
                         $result = array();
                         $result['id'] = $object_id;
                         commitDeleteObject($object_id);
-                        $result['created'] = False;   
+                        $result['created'] = False;
                         $result['objtype'] = (isset($data['row_objtype']))? $data['row_objtype'] : decodeObjectType($data['objtype_id']);
                         $result['row'] = $row_index;
                         //$message = (empty($object_id))? "FAILED CREATE OBJECT,": "FAILED '${$object_id}': ";
@@ -1464,7 +1464,7 @@ class BZObject {
                         // continue;
                     }
                 }
-                
+
                 $index++;
                 $ret[] = $result;
             }
@@ -1482,14 +1482,14 @@ class BZObject {
         if ($content) {
             foreach ($content as $data) {
                 $is_create = True;
-                // create object process  
-                $object_id = 0; 
+                // create object process
+                $object_id = 0;
                 $check_ignore = False;
                 if (!empty($data['id'])) {
                     $new_data = $data;
                     $object_id = intval($data['id']);
-                    $check_ignore = BZObject::common_check_object_diff($object_id,$new_data);  
-                    $is_create = False;                  
+                    $check_ignore = BZObject::common_check_object_diff($object_id,$new_data);
+                    $is_create = False;
                     //break;*/
                 }
                 //echo json_encode($data). "\n";
@@ -1498,17 +1498,17 @@ class BZObject {
                 if ($check_ignore == False) {
                     list($check_result,$has_position,$pos_create,$result) = BZObject::common_check_object($index,$data,$object_id);
                     //print_r($data);
-                    //if (self::$debug_mode) 
+                    //if (self::$debug_mode)
                         //continue;
-                    $flag = ($is_create)?'created':'updated';               
+                    $flag = ($is_create)?'created':'updated';
                     if ($check_result) {
                         try
                         {
                             //$result['id'] = $object_id;
                             if ($is_create) {
                                 $object_id = BZObject::create_object($has_position,$data);
-                                if(empty($object_id))  {    
-                                    $result[$flag] = False;   
+                                if(empty($object_id))  {
+                                    $result[$flag] = False;
                                     $result['objtype'] = (isset($data['row_objtype']))? $data['row_objtype'] : decodeObjectType($data['objtype_id']);
                                     $result['row'] = $row_index;
                                     $result['error'][] = array('field'=>NULL, 'msg'=> 'create object fail');
@@ -1521,12 +1521,12 @@ class BZObject {
                             $result = array();
                             $result['id'] = $object_id;
                             if ($is_create)
-                                commitDeleteObject($object_id);                        
-                            $result[$flag] = False;   
+                                commitDeleteObject($object_id);
+                            $result[$flag] = False;
                             $result['objtype'] = (isset($data['row_objtype']))? $data['row_objtype'] : decodeObjectType($data['objtype_id']);
                             $result['row'] = $row_index;
                             $result['error'][] = array('field'=>NULL, 'msg'=>$e->getMessage());
-                        }                                        
+                        }
                     }
                 } else {
                     $result = array();
@@ -1550,14 +1550,14 @@ class BZObject {
             //echo "ret:";print_r($ret);
             $err_rows = array_values($err_rows);
             //echo "err_rows:";print_r($err_rows);
-            $err_dict = array();            
+            $err_dict = array();
             foreach ($err_rows as $row){
                 $dict_key = $row['objtype'] ."_". strval($row['row']);
                 $err_dict[$dict_key] = $index;
                 $index++;
             }
 
-            foreach ($ret as &$ret_info) {                
+            foreach ($ret as &$ret_info) {
                 $com_key = $ret_info['objtype'] ."_". strval($ret_info['row']);
                 if(isset($err_dict[$com_key])) {
                     $rid = $err_dict[$com_key];
@@ -1566,7 +1566,7 @@ class BZObject {
                 }
             }
             //echo "err_dict:";print_r($err_dict);
-            foreach ($err_dict as $key => $rid) 
+            foreach ($err_dict as $key => $rid)
                 $ret[] = $err_rows[$rid];
             //$ret = array_merge($ret,array_values($err_rows));
         }
@@ -1574,22 +1574,22 @@ class BZObject {
         return array(True,$ret);
     }
 
-    public static function update_procedure($content) {        
+    public static function update_procedure($content) {
         $ret = array();
         $json_data = json_decode($content,True);
         $index = 0;
         if ($json_data) {
             foreach ($json_data as $data) {
                 //update object process
-                $object_id = $data['id'];              
+                $object_id = $data['id'];
                 $new_data = $data;
-                $check_ignore = BZObject::common_check_object_diff(intval($object_id),$new_data);  
+                $check_ignore = BZObject::common_check_object_diff(intval($object_id),$new_data);
                 $row_index = (isset($data['row_index']))? $data['row_index'] : $index;
                 if ($check_ignore == False) {
                     list($check_result,$has_position,$pos_create,$result) = BZObject::common_check_object($index,$data,$object_id);
                     $rack_id = $data['rack_id'];
                     $zerou = (isset($data['zerou']))?$data['zerou']: False;
-                    //return array(True,array('hp'=>$has_position,'ic'=>$pos_create,'rs'=>$result,'rk'=> $data['rack_id']));                
+                    //return array(True,array('hp'=>$has_position,'ic'=>$pos_create,'rs'=>$result,'rk'=> $data['rack_id']));
                     //continue;
                     if ($check_result) {
                         try
@@ -1600,7 +1600,7 @@ class BZObject {
                             $result = array();
                             $result['id'] = $object_id;
                         // commitDeleteObject($object_id);
-                            $result['updated'] = False;   
+                            $result['updated'] = False;
                             $result['objtype'] = (isset($data['row_objtype']))? $data['row_objtype'] : decodeObjectType($data['objtype_id']);
                             $result['row'] = $row_index;
                             $result['error'][] = array('field'=>NULL, 'msg'=>$e->getMessage());
@@ -1616,7 +1616,7 @@ class BZObject {
                     $result['updated'] = False;
                     $result['objtype'] = (isset($data['row_objtype']))? $data['row_objtype'] : decodeObjectType($data['objtype_id']);
                     $result['row'] = $row_index;
-                    $result['error'] = array();                    
+                    $result['error'] = array();
                 }
             }
         } else {
@@ -1638,8 +1638,8 @@ class BZObject {
         $zerou = (isset($data['zerou']))?$data['zerou']: False;
         $taglist = array();
 
-        // add object 
-        $object_id = commitAddObject($name, $label, $objtype_id, $asset_no, $taglist);        
+        // add object
+        $object_id = commitAddObject($name, $label, $objtype_id, $asset_no, $taglist);
         if (is_numeric($object_id)) {
             $comment = NULL;
             if (isset($data['comment'])) {
@@ -1651,20 +1651,20 @@ class BZObject {
                 //spotEntity ('object', intval($object_id));
 
                 $taglist = array();
-                foreach ($data['tags'] as $tag) 
+                foreach ($data['tags'] as $tag)
                     foreach ($tag as $key => $value) {
                         $tag_id = intval($value);
                         $taglist[] = $tag_id;
                         addTagForEntity ('object', $object_id, intval($tag_id));
                     }
-            }            
+            }
 
-            //write attribute process                             
+            //write attribute process
             if (! empty($data['hardware_type_id']))
                 $data['property'][] = array('id'=> 2, 'value' => $data['hardware_type_id']);
 
             $propertys = $data['property'];
-            foreach ($propertys as $property) {                
+            foreach ($propertys as $property) {
                 if (! empty($property['value'])) {
                     $attr_value = $property['value'];
                     $attr_id = intval($property['id']);
@@ -1672,12 +1672,12 @@ class BZObject {
                 }
             }
 
-            //setting positions process 
-            if ( $has_position && (! empty($rack_id))) {      
+            //setting positions process
+            if ( $has_position && (! empty($rack_id))) {
                 if ($zerou) {
                     require_once('DALSpace.php');
-                    //create zero u                    
-                    $entity_id = DALSpace::addObjectToZerou($rack_id,$object_id);                    
+                    //create zero u
+                    $entity_id = DALSpace::addObjectToZerou($rack_id,$object_id);
                 } else {
                     //create rack u
                     foreach ($data['units'] as $unit_no => $nuit_atom) {
@@ -1694,9 +1694,9 @@ class BZObject {
                                         'unit_no' => $unit_no,
                                         'atom' => $atom,
                                         'state' => 'T',
-                                        'label' => $label                                    
+                                        'label' => $label
                                     ));
-                                }                                
+                                }
 
                                 usePreparedInsertBlade
                                 (
@@ -1724,7 +1724,7 @@ class BZObject {
         $objtype_id = $data['objtype_id'];
         $name = $data['name'];
         $label = $data['label'];
-        $asset_no = $data['asset_tag'];                        
+        $asset_no = $data['asset_tag'];
         $location_id = $data['location_id'];
         $row_id = $data['row_id'];
         $rack_id = $data['rack_id'];
@@ -1734,9 +1734,9 @@ class BZObject {
         if (isset($data['comment'])) {
             $comment = (empty($data['comment']))? NULL:$data['comment'];
         }
-        
+
         $taglist = array();
-        // update object 
+        // update object
         if (! empty($object_id)) {
             commitUpdateObject ($object_id,$name, $label, 'no', $asset_no, $comment);
             $taglist = array();
@@ -1750,22 +1750,22 @@ class BZObject {
             }
             rebuildTagChainForEntity ('object', $object_id, buildTagChainFromIds ($taglist), TRUE);
 
-            //write attribute process 
+            //write attribute process
             //echo "write attribute process \n";
             if (! empty($data['hardware_type_id']))
-                $data['property'][] = array('id'=> 2, 'value' => $data['hardware_type_id']);                            
+                $data['property'][] = array('id'=> 2, 'value' => $data['hardware_type_id']);
 
-            $objAttrVals = getAttrValues($object_id);   
+            $objAttrVals = getAttrValues($object_id);
             $propertys = $data['property'];
-            foreach ($propertys as $property) {                
+            foreach ($propertys as $property) {
                 $attr_id = intval($property['id']);
                 $attr_value = (empty($property['value']))? "" : $property['value'];
                 commitUpdateAttrValue ($object_id, $attr_id, $attr_value);
             }
 
-            //setting positions process   
-            //echo json_encode(array('has_position' => $has_position, 'rid'=> $rack_id));   
-            require_once('DALSpace.php');         
+            //setting positions process
+            //echo json_encode(array('has_position' => $has_position, 'rid'=> $rack_id));
+            require_once('DALSpace.php');
             $position_to_empty = False;
             if ( $has_position && (! empty($rack_id))) {
                 //echo "setting positions process ";
@@ -1773,16 +1773,16 @@ class BZObject {
                     if ($zerou) {
                         if ($is_create) {
                             $delcount = 0;
-                            //check has rack u                            
-                            $userack_data = DALObject::getObjectRackData('object',$object_id);                                
-                            if (! empty($userack_data[$object_id]['units'])) { 
+                            //check has rack u
+                            $userack_data = DALObject::getObjectRackData('object',$object_id);
+                            if (! empty($userack_data[$object_id]['units'])) {
                                 //rack u -> zerou
                                 $delcount =1;
                                 //echo "Delete rack u data\n";
                                 $delcount = usePreparedDeleteBlade ('RackSpace', array ('object_id' => $object_id));
                                 if ($delcount > 0)
                                     //echo "add Object To Zerou\n";
-                                    $entity_id = DALSpace::addObjectToZerou($rack_id,$object_id);                                    
+                                    $entity_id = DALSpace::addObjectToZerou($rack_id,$object_id);
                             } else {
                                 //crete zero u
                                 //echo "add Object To Zerou\n";
@@ -1796,7 +1796,7 @@ class BZObject {
                                 if (DALSpace::deleteZerouObject($origi_rack_id,$object_id))
                                     $entity_id = DALSpace::addObjectToZerou($rack_id,$object_id);
                             } else {
-                                  //old zerou = new zerou 
+                                  //old zerou = new zerou
                                   //echo "{$origi_rack_id} nothing to do\n";
                             }
                         }
@@ -1810,14 +1810,14 @@ class BZObject {
                         if (DALSpace::checkZerouObjectExists($object_id)) {
                             //zerou -> rack u
                             $origi_rack_id = DALSpace::getZerouRackByObjectId($object_id);
-                            if (DALSpace::deleteZerouObject($origi_rack_id,$object_id) == False) { //avoid zerou and rack u same object                                
+                            if (DALSpace::deleteZerouObject($origi_rack_id,$object_id) == False) { //avoid zerou and rack u same object
                                 $is_racku_link = False;
                                 //echo "Delete zerou exists\n";
                             }
                         } else {
-                            //empty -> rack u 
+                            //empty -> rack u
                             //echo "create new rack u\n";
-                        }  
+                        }
                     } else {
                         //檢查 rack 內容是否有變動
                         $rack_data = DALObject::getObjectRackData('object',$object_id);
@@ -1832,17 +1832,17 @@ class BZObject {
                             $rack2 = serialize($data['units']);
                             if ($rack1 != $rack2)
                                 $is_delete = True;
-                             //移除舊的rack u 資訊,填入新的rack u 資訊    
+                             //移除舊的rack u 資訊,填入新的rack u 資訊
                             if ($is_delete) {
                                 //echo "delete rack u info\n";
                                 $delcount = usePreparedDeleteBlade ('RackSpace', array ('object_id' => $object_id));
-                            } else { 
+                            } else {
                                 //echo "rack u nothing to do\n";
                                 $is_racku_link = False;
                             }
                         }
                     }
-                    
+
                     if ($delcount > 0 || $is_racku_link) {
                         //echo "create rack u info\n";
                         foreach ($data['units'] as $unit_no => $nuit_atom) {
@@ -1851,9 +1851,9 @@ class BZObject {
                                     if ($nuit_atom[$pos] == False) continue;
                                     if ($pos == 'F')
                                         $atom = 'front';
-                                    elseif ($pos == 'I') 
+                                    elseif ($pos == 'I')
                                         $atom = 'interior';
-                                    else 
+                                    else
                                         $atom = 'rear';
                                     usePreparedInsertBlade
                                     (
@@ -1871,7 +1871,7 @@ class BZObject {
                             }
                         }
                     }
-                }        
+                }
             } else {
                 $position_to_empty = True;
             }
@@ -1882,9 +1882,9 @@ class BZObject {
                     $origi_rack_id = DALSpace::getZerouRackByObjectId($object_id);
                     //echo "origi_rack_id:{$origi_rack_id}\n";
                     $delete_result = DALSpace::deleteZerouObject($origi_rack_id,$object_id);
-                    //echo "Clear zero u info\n";                    
+                    //echo "Clear zero u info\n";
                 }
-                
+
                 $userack_data = DALObject::getObjectRackData('object',$object_id);
                 if (! empty($userack_data[$object_id]['units'])) {
                     //echo "Clear rack u info\n";
@@ -1919,7 +1919,6 @@ class BZObject {
 
     public static function import_objects($content) {
         $json_data = (is_array($content))? $content : $json_data = json_decode($content,True);
-
        /*if (self::$debug_mode) {
             putLog($json_data);
         }*/
@@ -1931,7 +1930,7 @@ class BZObject {
         $obj_row_arr = array();
         $obj_rack_arr = array();
         $position_count = 0;
-        
+
         $object_data = array();
         $index = 0;
         $objects = array();
@@ -1953,7 +1952,7 @@ class BZObject {
                 } elseif ($field == strtolower("HW Type")) {
                     $check_data = True;
                 }
-        
+
                 if ($check_data) {
                     $check = False;
                     if (! empty($value)) {
@@ -1964,31 +1963,31 @@ class BZObject {
                                     $obj_types_arr[$type] = array();
                                 $obj_types_arr[$type][] = $index;
                             }
-                            $check = True;                   
+                            $check = True;
                         } else $message = array('msg'=>"field \"{$field}\" length is too big");
                     } else $message = array('msg'=>"field \"{$field}\" empty");
-        
-                    if (!$check) {                        
+
+                    if (!$check) {
                         $check_result = False;
                         $err_message[] = $message;
-                    } 
+                    }
                 }
                 //all key to lower
-                $object_data[$field] = $value;                
+                $object_data[$field] = $value;
             }
-            //print_r($object_data); 
+            //print_r($object_data);
             //check require field exists
             if ((! isset($object_data['object type'])) || (! isset($object_data['hw type']))) {
                 $err_message[] = array('row'=> $index,'msg'=>"format invalid");
                 $check_result = False;
             }
-        
+
             if (! $check_result) {
                 $err_rows[] = array('objtype'=>$row_objtype,'row'=> $row_index,'error'=>$err_message);
                 $index++;
                 continue;
             }
-            
+
             $obj_comname_arr[] = $object_data['common name'];
             //collect tags procedure
             if (! empty($object_data['tag'])) {
@@ -1997,29 +1996,28 @@ class BZObject {
                     $tag_arr = explode(",",$object_data['tag']);
                     $obj_tags_arr = array_merge($obj_tags_arr,$tag_arr);
                     $object_data['tag'] = $tag_arr;
-                } else 
+                } else
                     $obj_tags_arr[] = $object_data['tag'];
             }
-        
+
             //collect position procedure
-            //echo $object_data['location'].",".$object_data['row'].",".$object_data['rack']."\n";
+            //echo htmlspecialchars($object_data['location']).",".$object_data['row'].",".$object_data['rack']."\n";
             if ((! empty($object_data['location'])) && (! empty($object_data['row'])) && (! empty($object_data['rack']))) {
-                
-                if (! in_array($object_data['location'], $obj_loc_arr)) $obj_loc_arr[] = $object_data['location'];
+                if (! in_array($object_data['location'], $obj_loc_arr)) $obj_loc_arr[] = htmlspecialchars($object_data['location']);
                 if (! in_array($object_data['row'], $obj_row_arr)) $obj_row_arr[] = $object_data['row'];
                 if (! in_array($object_data['rack'], $obj_rack_arr)) $obj_rack_arr[] = $object_data['rack'];
-        
+
                 // parser rack u data
                 if (! empty($object_data['rack u'])) {
                     if (strpos($object_data['rack u'], ',') !== false) {
-                        $u_arr = explode(",",$object_data['rack u']);                
+                        $u_arr = explode(",",$object_data['rack u']);
                         $object_data['rack u'] = $u_arr;
-                        
+
                     }
                 }
                 $position_count++;
             }
-        
+
             $objects[$index] = $object_data;
             $index++;
         }
@@ -2037,10 +2035,10 @@ class BZObject {
                             'tags' => NULL,
                             'property' => array(),
                             'units' => array());
-        
+
             $type_keys = array_keys($obj_types_arr);
             $types = implode(",",$type_keys);
-            //$ret =  BZObject::get_objtype_columns(NULL,$types);        
+            //$ret =  BZObject::get_objtype_columns(NULL,$types);
             $obj_columns = BZObject::get_objtype_columns(NULL,$types);
 
             $attr_dicts = array();
@@ -2058,7 +2056,7 @@ class BZObject {
                 }
                 //print_r($attr_dicts);
                 if (count($attr_dicts)>0) {
-                    $attr_names = implode(",",$attr_dicts);    
+                    $attr_names = implode(",",$attr_dicts);
                     $obj_dicts = BZObject::getDictAttrValueListByName(NULL,$attr_names)[1];
                     //$ret = BZObject::getDictAttrValueListByName(NULL,$attr_names)[1];
                 }
@@ -2081,7 +2079,7 @@ class BZObject {
                 //echo $locations."\n";
                 $rows = implode(",",$obj_row_arr);
                 //echo $rows."\n";
-                $racks = implode(",",$obj_rack_arr);        
+                $racks = implode(",",$obj_rack_arr);
                 //echo $racks."\n";
                 require_once('BZSpace.php');
 
@@ -2089,13 +2087,13 @@ class BZObject {
                 //print_r($obj_positions);
                 //$ret = BZSpace::get_position_namelist($locations,$rows,$racks)[1];
             }
-        
+
             //convert racktable format
             $new_objects = array();
             $object_rack = array();
             $object_comname = array();
             $object_assetno = array();
-            $batch_tags = array();            
+            $batch_tags = array();
             foreach ($objects AS $index => $data) {
                 $err_message = array();
                 //print_r($data);
@@ -2107,7 +2105,7 @@ class BZObject {
                 $obj_type_name = $data['object type'];
                 $obj_hw_name = $data['hw type'];
                 $next_check = True;
-        
+
                 if (isset($object_comname[$row_commname])) {
                     $next_check = False;
                     $err_message[] = array('field'=> 'Common Name','msg'=>"name already exists");
@@ -2133,7 +2131,7 @@ class BZObject {
                     $obj_type_data = $obj_columns[$obj_type_name];
                     $newobject['objtype_id'] = intval($obj_type_data['HW Type']['objtype_id']);
                     $hw_exsits = False;
-                    //check hw exists            
+                    //check hw exists
                     if (isset($obj_hwtypes[$obj_type_name])) {
                         foreach ($obj_hwtypes[$obj_type_name] as $key => $value) {
                             //echo "obj_hw_name:[".strtolower($obj_hw_name) ."]==[". strtolower($key)."]";
@@ -2145,7 +2143,7 @@ class BZObject {
                             }
                         }
                     }
-        
+
                     if ($hw_exsits) {
                         //set system field
                         //print_r($data);
@@ -2157,33 +2155,33 @@ class BZObject {
                         //$newobject['location'] =  $data['location'];
                         //echo "name:".$newobject['name'] .",loc:".$newobject['location']."\n";
                        // $newobject['row_id'] =  (empty($data['row_id']))? NULL: ntval($position_data['row_id']);
-                       // $newobject['rack_id'] =  (empty($data['rack_id']))? NULL: intval($position_data['rack_id']);   
+                       // $newobject['rack_id'] =  (empty($data['rack_id']))? NULL: intval($position_data['rack_id']);
                         //set propertys
                         $prop_index = 0;
                         //print_r($obj_type_data);
                         foreach ($obj_type_data as $key => $info) {
                             $field = strtolower($key);
-                            if ($field == 'hw type') continue;                    
+                            if ($field == 'hw type') continue;
                             if (isset($data[$field])) {
                                 $value = NULL;
-                                if ($info['type'] == 'date') {                                    
+                                if ($info['type'] == 'date') {
                                     //$tsdatetime = DateTime::createFromFormat('Y/m/d', $data[$field]);
                                     //$value = $tsdatetime->getTimestamp();
                                     $value = (empty($data[$field]))?NULL:intval($data[$field]);
                                 } elseif ($info['type'] == 'dict') {
                                     $itme_value = $data[$field];
-                                    if (isset($obj_dicts[$field][$itme_value])) {                                
+                                    if (isset($obj_dicts[$field][$itme_value])) {
                                         //print_r($obj_dicts[$field][$itme_value]);
-                                        $value = $obj_dicts[$field][$itme_value]['dict_key'];                                
+                                        $value = $obj_dicts[$field][$itme_value]['dict_key'];
                                     }
                                 } elseif ($info['type'] == 'float') {
                                     $value = (empty($data[$field]))?NULL:floatval($data[$field]);
                                 } elseif ($info['type'] == 'uint') {
-                                    $value = (empty($data[$field]))?NULL:intval($data[$field]);                   
+                                    $value = (empty($data[$field]))?NULL:intval($data[$field]);
                                 } else {
                                     $value = (empty($data[$field]))?NULL:strval($data[$field]);
                                 }
-                                
+
                                 $newobject['property'][] = array('id' => intval($info['id']),
                                                                  'value' => $value);
                                 $prop_index++;
@@ -2192,18 +2190,18 @@ class BZObject {
                         //set tag
                         if (! empty($data['tag'])) {
                             $newobject['tags'] = array();
-                            $tag = $data['tag'];     
+                            $tag = $data['tag'];
 
-                            if (is_array($tag)) {                                
+                            if (is_array($tag)) {
                                 foreach ($tag as $tag_item) {
                                     if (isset($obj_tags[$tag_item])) {
                                         $newobject['tags'][] = array('id'=>$obj_tags[$tag_item]);
                                     } else {
-                                        //$err_message[] = array('field'=>'tag', 'msg'=>'tag:'.$tag_item.' not found');                                        
+                                        //$err_message[] = array('field'=>'tag', 'msg'=>'tag:'.$tag_item.' not found');
                                         if (! isset($batch_tags[$tag_item])) {
                                             require_once('DALTag.php');
                                             $tag_name_arr = DALTag::getTagByName($tag_item,true);
-                                            if (! isset($tag_name_arr[$tag_item])) {                                                
+                                            if (! isset($tag_name_arr[$tag_item])) {
                                                $tag_id = DALTag::addObjectTag(NULL,$tag_item,NULL);
                                                 if (! empty($tag_id)) {
                                                     $batch_tags[$tag_item] = $tag_id;
@@ -2211,13 +2209,13 @@ class BZObject {
                                                 } else {
                                                     $err_message[] = array('field'=>'tag', 'msg'=>'tag create fail');
                                                 }
-                                                
+
                                             }
                                         } else {
                                             $newobject['tags'][] = array('id'=> $batch_tags[$tag_item]);
                                         }
                                     }
-                                }                                
+                                }
                             } else {
                                 if (isset($obj_tags[$tag])) {
                                     $newobject['tags'][] = array('id' => $obj_tags[$tag]);
@@ -2250,7 +2248,7 @@ class BZObject {
                         if ((! empty($data['location'])) && (! empty($data['row'])) && (! empty($data['rack']))) {
                         //if ((! empty($data['location'])) && (! empty($data['row'])) && (! empty($data['rack'])) && (! empty($data['rack u'])) ) {
                             if (count($obj_positions) > 0) {
-                                $location = $data['location'];
+                                $location = htmlspecialchars($data['location']);
                                 $row = $data['row'];
                                 $rack = $data['rack'];
                                 $ru = $data['rack u'];
@@ -2260,18 +2258,18 @@ class BZObject {
                                     $location_id = intval($position_data['location_id']);
                                     $newobject['location_id'] = $location_id;
                                     $row_id = intval($position_data['row_id']);
-                                    $newobject['row_id'] = $row_id;                              
-                                    $rack_id = intval($position_data['rack_id']);   
+                                    $newobject['row_id'] = $row_id;
+                                    $rack_id = intval($position_data['rack_id']);
                                     $newobject['rack_id'] = $rack_id;
-                                 
+
                                     if (! empty($ru) || $ru == '0') {
                                         $newobject['zerou'] = False;
-                                        if ($ru == '0') 
+                                        if ($ru == '0')
                                             $newobject['zerou'] = True;
 
                                         if ($newobject['zerou'] == False) { //no zerou
                                             $racku_empty = array("F"=>true, "I"=>true, "R"=>true);
-                                            if (! is_array($ru)) 
+                                            if (! is_array($ru))
                                                 $ru = array($data['rack u']);
 
                                             foreach ($ru as $racku) {
@@ -2284,11 +2282,11 @@ class BZObject {
                                                 }
                                                 //echo "racku:". $racku . "\n";
                                                 if (BZSpace::check_position_namelist($data['location'],$data['row'],$data['rack'],$racku,$obj_positions)) {
-                                                    if (! isset($object_rack[$location_id][$row_id][$rack_id][$racku])) {                                                        
+                                                    if (! isset($object_rack[$location_id][$row_id][$rack_id][$racku])) {
                                                         $object_rack[$location_id][$row_id][$rack_id][$racku] = True;
                                                         if (isset($data['front']) && isset($data['interior']) && isset($data['back'])) {
                                                             $racku_atoms = array();
-                                                            if ((is_bool($data['front']))&&(is_bool($data['interior']))&&(is_bool($data['back']))) {                                                                
+                                                            if ((is_bool($data['front']))&&(is_bool($data['interior']))&&(is_bool($data['back']))) {
                                                                 $racku_atoms['F'] = $data['front'];
                                                                 $racku_atoms['I'] = $data['interior'];
                                                                 $racku_atoms['R'] = $data['back'];
@@ -2311,7 +2309,7 @@ class BZObject {
 
                                                             if (empty($racku_atoms)){
                                                                 $err_message[] = array('field'=>'rack u', 'msg'=>'front / interior / back invalid');
-                                                                break;                                                               
+                                                                break;
                                                             } else {
                                                                 if ($racku_atoms['F']==False && $racku_atoms['I']==False && $racku_atoms['R']==False)
                                                                     $newobject['units'][$racku] = $racku_empty;
@@ -2345,22 +2343,22 @@ class BZObject {
                             } else {
                                 $err_message[] = array('field'=>'positions', 'msg'=>'Positions did not exist in db');
                             }
-                            //*** import set new object (convert format) ***//                            
+                            //*** import set new object (convert format) ***//
                             if (empty($err_message))
                                 $new_objects[] = $newobject;
-                        } else {                            
+                        } else {
                             $is_verify = True;
                             if (! empty($data['location'])) {
                                 if (empty($data['row'])){
                                     $is_verify = False;
                                     $err_message[] = array('field'=>'row', 'msg'=>'row is empty');
                                 }
-                                
+
                                 if (empty($data['rack'])) {
                                     $err_message[] = array('field'=>'rack', 'msg'=>'rack is empty');
                                     $is_verify = False;
                                 }
-                                
+
                                 if (empty($data['rack u'])) {
                                     /*if ($data['rack u'] == 0 || $data['rack u'] == '0') {
                                         if ($is_verify)
@@ -2369,12 +2367,12 @@ class BZObject {
                                         $err_message[] = array('field'=>'rack u', 'msg'=>'rack u is empty');
                                         $is_verify = False;
                                     //}
-                                }  
+                                }
                             }
 
-                            if ($is_verify)                               
+                            if ($is_verify)
                                 $new_objects[] = $newobject;
-                             
+
                             //$new_objects[] = $newobject;
                         }
                     } else {
@@ -2382,24 +2380,24 @@ class BZObject {
                     }
                 } else {
                     if($next_check)
-                        $err_message[] = array('fied'=> 'object type','msg'=>"object type don't exists.");                    
+                        $err_message[] = array('fied'=> 'object type','msg'=>"object type don't exists.");
                 }
 
                 if (count($err_message)>0)
                     $err_rows[] = array('objtype'=>$row_objtype,'created'=>False,'name'=>$row_commname,'row'=> $row_index,'error'=>$err_message);
-                
+
                 $index++;
                // print_r($newobject);
             }
         } else {
             $err_message[] = array('fied'=> -1,'msg'=>"import abort(object type not found");
-        }        
-        //$ret = $new_objects;        
+        }
+        //$ret = $new_objects;
         //print_r($err_rows);
         /*if (self::$debug_mode) {
             putLog($new_objects);
         }*/
-        
+
         return BZObject::import_procedure($new_objects,$err_rows);
     }
 

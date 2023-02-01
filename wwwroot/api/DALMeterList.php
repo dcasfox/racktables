@@ -12,15 +12,9 @@ class DALmeterselect {
             array_values($arr)
         );
 
-       // foreach ($arr as $key => $val) {
-       //     if (is_array($val)) {
-       //        DALmeterselect::fixArrayKey($arr[$key]);
-       //     }
-       // }
     }
 
     function get_host_tag($token){
-       //where tt.tag = '_d7af5a388680ccba9161e6d8a810d98470a26591e959fb209fe07bd67769476b'
         $datas = array();
         $sql = " 
 
@@ -33,11 +27,9 @@ class DALmeterselect {
         where  ht.value is not null
         
         " ;
-        //$result = mysqli_query($link,$sql);
         $result = usePreparedSelectBlade($sql);
         
         if ($result) {
-            //if (mysqli_num_rows($result)>0) {
                 while ($row = $result->fetch(PDO::FETCH_ASSOC)){
                     if ($row['token']==$token) {
                         $datas[$row['name']][$row['tag']] = $row['value'];
@@ -45,14 +37,12 @@ class DALmeterselect {
                 }
 
         }
-          //  mysqli_free_result($result);
 
         if(!empty($datas)){
             return $datas;
         }
         else{
             $datas['message']['data'] ='nodata';
-            #return "Nodata";
             return $datas;
         }
 
@@ -63,20 +53,15 @@ class DALmeterselect {
 
         $datas = array();
         $sql = " SELECT objtype_id,name,asset_no,label,dict_value FROM `Object` Obj left Join Dictionary d on d.dict_key =Obj.objtype_id where dict_value = 'Power Meter'" ;
-        //$result = mysqli_query($link,$sql);
         $result = usePreparedSelectBlade($sql);
 
         if ($result) {
 
-            //if (mysqli_num_rows($result)>0) {
                 while ($row = $result->fetch(PDO::FETCH_ASSOC)){
-                //while ($row = mysqli_fetch_assoc($result)) {
                     $datas[$row['name']] = $row;
                 }
-           // }
 
         }
-          //  mysqli_free_result($result);
 
         if(!empty($datas)){
             return $datas;
@@ -109,13 +94,10 @@ class DALmeterselect {
             )
             AS tbl   ";
 
-        //$result = mysqli_query($link,$sql);
         $result = usePreparedSelectBlade($sql);
 
         if ($result) {
-            //if (mysqli_num_rows($result)>0) {
                 while ($row = $result->fetch(PDO::FETCH_ASSOC)){
-                //while ($row = mysqli_fetch_assoc($result)) {
                     $tmp_array = array();
                     $tmp_array = array(
                         $row['Attrrbute_Name'] => $row['string_value']
@@ -128,9 +110,7 @@ class DALmeterselect {
                     }
                 }
                 
-            //}
         }
-           // mysqli_free_result($result);
             return $tmp_array_;
     }
 
@@ -149,15 +129,10 @@ class DALmeterselect {
         WHERE POI.oif_name like 'Electric Cable up'
         ";
 
-        //$result = mysqli_query($link,$sql);
         $result = usePreparedSelectBlade($sql);
 
         if ($result) {
-            //if (mysqli_num_rows($result)>0) {
-                while ($row = $result->fetch(PDO::FETCH_ASSOC)){
-                //while ($row = mysqli_fetch_assoc($result)) {
-                
-    
+                while ($row = $result->fetch(PDO::FETCH_ASSOC)){ 
                     if (array_key_exists($row['item'],$tmp_array_up)){
                         $tmp_array_up[$row['item']]  = array_merge($tmp_array_up[$row['item']],array($row['down_stream']));
                     }
@@ -172,11 +147,9 @@ class DALmeterselect {
                         $tmp_array_down[$row['down_stream']] = array($row['item']);
                     }
 
-               // }
                 
             }
         }
-            //mysqli_free_result($result);
             return [$tmp_array_up,$tmp_array_down];
     }
 
@@ -219,13 +192,10 @@ class DALmeterselect {
 
         ";
 
-        //$result = mysqli_query($link,$sql);
         $result = usePreparedSelectBlade($sql);
 
         if ($result) {
-            //if (mysqli_num_rows($result)>0) {
                 while ($row = $result->fetch(PDO::FETCH_ASSOC)){
-                //while ($row = mysqli_fetch_assoc($result)) {
                 
                     if (array_key_exists($row['down_stream'],$tmp_array_down)){
                         $tmp_array_down[$row['down_stream']]  = array_merge($tmp_array_down[$row['down_stream']],array($row['item']));
@@ -233,11 +203,9 @@ class DALmeterselect {
                     else {
                         $tmp_array_down[$row['down_stream']] = array($row['item']);
                     }
-               // }
                 
             }
         }
-            //mysqli_free_result($result);
             return $tmp_array_down;
     }
 
@@ -279,13 +247,10 @@ class DALmeterselect {
         
         ";
 
-        //$result = mysqli_query($link,$sql);
         $result = usePreparedSelectBlade($sql);
 
         if ($result) {
-            //if (mysqli_num_rows($result)>0) {
                 while ($row = $result->fetch(PDO::FETCH_ASSOC)){
-                //while ($row = mysqli_fetch_assoc($result)) {
                 
             
                     if (array_key_exists($row['item'],$tmp_array_up)){
@@ -297,7 +262,6 @@ class DALmeterselect {
                 
             }
         }
-            //mysqli_free_result($result);
             return $tmp_array_up;
     }
 
@@ -306,7 +270,6 @@ class DALmeterselect {
 
 
     function GetMeterInfo($token='_d7af5a388680ccba9161e6d8a810d98470a26591e959fb209fe07bd67769476b',$filter_tag='Active_Energy'){
-        //require_once 'db_connect.php';
         
 
         $all = array();
@@ -317,18 +280,14 @@ class DALmeterselect {
         $host_tag_map = DALmeterselect::get_host_tag($token);
         $host_tag_map;
         $down_stream_ =DALmeterselect::down_stream();
-        #return $down_stream_;
         $up_stream_ =DALmeterselect::up_stream();
-        #return $up_stream_;
 
         $datas_stream = DALmeterselect::up_and_down_stream();
-        #return 1;
 
         foreach ($datas_common as $key => $value){
             $arr = array();
             $arr_up = array();
             if (array_key_exists($key,$down_stream_)){
-                //
                 $arr = array(
                 'Downstream'  =>  $down_stream_[$key]
                 );
@@ -353,50 +312,35 @@ class DALmeterselect {
             $a = array_map('trim', array_keys($datas[$key]));
             $b = array_map('trim', $datas[$key]);
             $datas[$key] = array_combine($a, $b);
-            //return $datas[$key];
-            //DALmeterselect::fixArrayKey($datas[$key]);
-
-
+            #return $datas[$key];
             if (array_key_exists('Metrics Config',$datas[$key])){
                 $metrics = json_decode($datas[$key]['Metrics Config'],true);
                 $datas[$key]['Metrics Config'] = $metrics;
-                #unset($datas[$key]['Metrics Config']);
-                #return $metrics;
-                #return $metrics['Power']['Active_Energy'];
                 if  (array_key_exists($filter_tag,$metrics['Power'])){
                     array_push($item_host_map,array('host'=>$key,'item'=> $metrics['Power'][$filter_tag][0]));
                     $mag[$key]=array(
                         'Name' =>$datas_common[$key]['name'],
-                        'Description' =>$datas[$key]['Description'],
+                        'Description' =>$datas[$key]['Purpose'],
                         'Hosttag' =>$host_tag_map[$key],
                         'AssetAtrributes' =>$datas[$key]
                     );
 
-                    unset($mag[$key]['tags']['Description']);
-                    
-                    //DALmeterselect::fixArrayKey($datas[$key]);
-                    //DALmeterselect::fixArrayKey($datas[$key]);
-
+                    unset($mag[$key]['AssetAtrributes']['Purpose']);
+                    #return $mag[$key];
                     $merge  = array_merge($mag[$key],$arr_up,$arr);
                     DALmeterselect::fixArrayKey($merge);
-                   
                     array_push($all,$merge);
                }
-                //return array_keys($metrics);
             
             }
           
 
         
         }
-        //DALmeterselect::fixArrayKey($all);
-        #DALmeterselect::fixArrayKey($item_host_map);
 
         $outputarray = array('Config' => $all,'ItemName' =>$item_host_map);
         DALmeterselect::fixArrayKey($outputarray);
-        //return json_encode($all);
         return $outputarray;
-        //mysqli_close($link);
     }
     
 }

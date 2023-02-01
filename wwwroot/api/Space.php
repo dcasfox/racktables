@@ -12,7 +12,7 @@ class Space {
         $data = BZSpace::getPositionByObjectId($args['object_id']);
         return outSuccess($data,count($data));
     }
-    
+
     public static function getLocationData($args) {
         $data = BZSpace::getLocationData($args['location_id']);
         return outSuccess($data,count($data));
@@ -28,7 +28,7 @@ class Space {
         return outSuccess($data,count($data));
     }
 
-    //## v2 achiteture  
+    //## v2 achiteture
     public static function get_location_tree($args,$path_params) {
         list($success,$data) = BZSpace::get_location_tree();
         return outSuccess($data,count($data));
@@ -62,10 +62,14 @@ class Space {
             return outSuccess($data,count($data));
         } else {
             return outFail($data);
-        }        
+        }
     }
 
-    
+    public static function getEMSLocationData() {
+        $data = BZSpace::getEnMSLocationData();
+        return outSuccess($data,count($data));
+    }
+
 
 }
 ?>

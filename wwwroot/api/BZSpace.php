@@ -2,7 +2,7 @@
 include ('DALSpace.php');
 
 class BZSpace {
-   
+
     //input : racks => integer array
     //output : float array
     public static function getSpaceUsage($racks,$attach_objects=False)
@@ -12,7 +12,7 @@ class BZSpace {
         $objects = array();
         foreach ($racks as $rack_id) {
             $counter = array ('A' => 0, 'U' => 0, 'T' => 0, 'W' => 0, 'F' => 0);
-            
+
             $data  = spotEntity ('rack', intval($rack_id));
             amplifyCell ($data);
             $objects[$rack_id] = $data['mountedObjects'];
@@ -31,6 +31,97 @@ class BZSpace {
         }
     }
     
+    public static function recursion($data)
+    {
+        $childs = array();   // 定義儲存子級資料陣列
+        if (! empty($child['kids'])) {
+            $childs = self::recursion($child['kids']);   // 遞回呼叫，查詢當前資料的子級              
+        } 
+        $childs[] = array('label'=>$child['label'],'id'=>$child['id']);  // 把子級資料新增進陣列
+        return $childs;
+    }
+
+    public static function getEnMSLocationData()
+    {
+        //        echo $lid . "\n";
+        $tmpIds = array();
+        $locationlist = listCells ('location');
+        foreach ($locationlist as $loc) {
+            $tmpIds[] = intval($loc['id']);
+
+        }
+        sort($tmpIds);
+
+        $ret = DALSpace::getLocationData($tmpIds);
+        if (count($ret)>0) {
+            foreach($ret as &$loc_data) {
+                //echo "loc:" . $loc_data['location_name'] . "\n";
+                $loc_usage = 0;
+                foreach($loc_data['children'] as &$row_data) {
+                    //echo "row:" . $row_data['row_name'] . "\n";
+                    $row_total_usage = 0;
+                    $keys = array_column($row_data['children'], 'rack_id');
+                    $arrUsages = BZSpace::getSpaceUsage($keys);
+                    foreach($arrUsages as $key => $percentage) {
+                        $index = array_search($key, $keys);
+                        $id = $row_data['children'][$index]['rack_id'];
+                        if (intval($id) == intval($key)) {
+                            $row_data['children'][$index]['usage'] = $percentage;
+                            $row_total_usage = $row_total_usage + $percentage;
+                        }
+                    }
+                }
+            }
+        }
+        return $ret;
+    }
+
+    public static function getEnMSLocationData_test()
+    {
+        //        echo $lid . "\n";
+        $tmpIds = array();
+        $locationlist = listCells ('location');
+        foreach ($locationlist as $loc) {
+            $tmpIds[] = intval($loc['id']);
+
+        }
+
+        $loc_children = array();
+        $loc_childs = treeFromList (addTraceToNodes ($locationlist));
+        foreach($loc_childs as $child) {
+            $id = strval($child['id']);
+            if (empty($child['kids'])) {
+                $loc_children[$id] = array('label'=>$child['label'],'id'=>$child['id']);
+            } else {
+                $loc_children[$id] = self::recursion($child['kids']);
+            }
+        }
+        sort($tmpIds);
+
+        $ret = DALSpace::getLocationData($tmpIds);
+        if (count($ret)>0) {
+            foreach($ret as &$loc_data) {
+                //echo "loc:" . $loc_data['location_name'] . "\n";
+                $loc_usage = 0;
+                foreach($loc_data['children'] as &$row_data) {
+                    //echo "row:" . $row_data['row_name'] . "\n";
+                    $row_total_usage = 0;
+                    $keys = array_column($row_data['children'], 'rack_id');
+                    $arrUsages = BZSpace::getSpaceUsage($keys);
+                    foreach($arrUsages as $key => $percentage) {
+                        $index = array_search($key, $keys);
+                        $id = $row_data['children'][$index]['rack_id'];
+                        if (intval($id) == intval($key)) {
+                            $row_data['children'][$index]['usage'] = $percentage;
+                            $row_total_usage = $row_total_usage + $percentage;
+                        }
+                    }
+                }
+            }
+        }
+        return $ret;
+    }
+
     //input : $lid => integer
     //output : array()
     public static function getLocationData($lids)
@@ -43,7 +134,7 @@ class BZSpace {
             if (! empty($lids))
                 $tmpIds = array($lids);
         }
-        
+
         $ret = DALSpace::getLocationData($tmpIds);
         if (count($ret)>0) {
             foreach($ret as &$loc_data) {
@@ -65,22 +156,25 @@ class BZSpace {
                                 $row_total_usage = $row_total_usage + $percentage;
                             }
                         }
-                        
+
                         $row_data['row_usage'] = ((int) ($row_total_usage / count($keys)));
-                        $loc_usage = $loc_usage + $row_data['row_usage'];                  
+                        $loc_usage = $loc_usage + $row_data['row_usage'];
                     } else {
                         $row_data['row_usage'] = 0;
                         $loc_usage = 0;
                     }
                 }
-                if ($loc_usage>0) 
-                    $loc_data['loc_usage'] = (round($loc_usage / count($loc_data['children']))); 
-                else 
+                if ($loc_usage>0)
+                    $loc_data['loc_usage'] = (round($loc_usage / count($loc_data['children'])));
+                else
                     $loc_data['loc_usage'] = 0;
-            }                
-        }            
+            }
+        }
         return $ret;
     }
+
+
+
 
     //input : $lid => integer
     //output : array()
@@ -102,12 +196,12 @@ class BZSpace {
                         $row_total_usage = $row_total_usage + $percentage;
                     }
                 }
-                
+
                 $row_data['row_usage'] = ((int) ($row_total_usage / count($keys)));
                 $loc_usage = $loc_usage + $row_data['row_usage'];
             }
-            $ret['loc_usage'] = (round($loc_usage / count($ret['row_data'])));     
-        }            
+            $ret['loc_usage'] = (round($loc_usage / count($ret['row_data'])));
+        }
         return $ret;
     }
 
@@ -117,7 +211,7 @@ class BZSpace {
         if (isset($ret['children'])) {
             $row_total_usage = 0;
             if (count($ret['children'])> 0) {
-                $keys = array_column($ret['children'], 'rack_id');            
+                $keys = array_column($ret['children'], 'rack_id');
                 $arrUsages = BZSpace::getSpaceUsage($keys);
                 foreach($arrUsages as $key => $percentage) {
                     $index = array_search($key, $keys);
@@ -126,14 +220,14 @@ class BZSpace {
                         $ret['children'][$index]['usage'] = $percentage;
                         $row_total_usage = $row_total_usage + $percentage;
                     }
-                }            
+                }
                 $ret['row_usage'] = (round($row_total_usage / count($keys)));
-            } else 
+            } else
             $ret['row_usage'] = 0;
         }
         return $ret;
     }
-    
+
     public static function getRackData($id) {
         $ret = DALSpace::getRackData($id);
         if (isset($ret['id'])) {
@@ -147,7 +241,7 @@ class BZSpace {
         }
         return $ret;
     }
-    
+
     public static function getRackDetail($rack_id,$selectId=0)
     {
         $counter = array ('A' => 0, 'U' => 0, 'T' => 0, 'W' => 0, 'F' => 0);
@@ -161,10 +255,10 @@ class BZSpace {
                      'row_id' => intval($data['row_id']),
                      'row_name' => $data['row_name'],
                      'location_id' => intval($data['location_id']),
-                     'location_name' => $data['location_name']);
-            //get location tree data; 
+                     'location_name' => htmlspecialchars_decode($data['location_name']));
+            //get location tree data;
         $ret['locations'] = array();
-        if (!empty($data['location_id'])) {                    
+        if (!empty($data['location_id'])) {
             $locData = DALSpace::getLocationDataAll();
             $loop_limit = 30;
             $loop_index = 0;
@@ -173,12 +267,12 @@ class BZSpace {
             while(true) {
                 if ($loop_index>$loop_limit || empty($cid))
                     break;
-                $pid = $locData[$cid]['parent_id'];     
-                $locationData[$cid ] = array('id'=> intval($cid),'name' => $locData[$cid]['name']);
+                $pid = $locData[$cid]['parent_id'];
+                $locationData[$cid ] = array('id'=> intval($cid),'name' => htmlspecialchars_decode($locData[$cid]['name']));
                 $cid = $pid;
                 $loop_index++;
             }
-            $ret['locations'] = array_reverse($locationData);            
+            $ret['locations'] = array_reverse($locationData);
         }
         unset($ret['location_id']);
         unset($ret['location_name']);
@@ -187,7 +281,7 @@ class BZSpace {
         //print_r($data['mountedObjects']);
         $ret['objects'] = count($data['mountedObjects']);
         $objIds = implode(",",$data['mountedObjects']);
-        require_once('DALObject.php');        
+        require_once('DALObject.php');
         $assetData = (empty($objIds))? array() : DALObject::getAssetIdByObject(trim($objIds,","),True);
         $assetKeys = array();
         $rows = array();
@@ -195,14 +289,14 @@ class BZSpace {
             echo $key." " . json_encode($data) . "\n";
         */
         $dict_objmap = array();
-        for ($unit_no = $data['height']; $unit_no > 0; $unit_no--) {    
+        for ($unit_no = $data['height']; $unit_no > 0; $unit_no--) {
             $unit = array();
-            for ($locidx = 0; $locidx < 3; $locidx++) {         
+            for ($locidx = 0; $locidx < 3; $locidx++) {
                 $state = $data[$unit_no][$locidx]['state'];
                 $counter[$data[$unit_no][$locidx]['state']]++;
 
                 if($state == 'T') {
-                    //$object_data = spotEntity('object', $data[$unit_no][$locidx]['object_id']); 
+                    //$object_data = spotEntity('object', $data[$unit_no][$locidx]['object_id']);
                     $id = intval($data[$unit_no][$locidx]['object_id']);
                     $highlight = False;
                     if($selectId == $id) {
@@ -215,27 +309,27 @@ class BZSpace {
                         $data[$unit_no][$locidx]['label'] = $assetData[$id]['label'];
                         $data[$unit_no][$locidx]['type_id'] = intval($assetData[$id]['objtype_id']);
                         $data[$unit_no][$locidx]['type'] = $assetData[$id]['objtype'];
-                        $data[$unit_no][$locidx]['asset_id'] = $assetData[$id]['asset_id'];      
+                        $data[$unit_no][$locidx]['asset_id'] = $assetData[$id]['asset_id'];
                         if (! empty($assetData[$id]['asset_id'])) {
-                            if(! in_array($assetData[$id]['asset_id'],$assetKeys)) 
-                                $assetKeys[] = $assetData[$id]['asset_id'];                                
-                        }                                          
+                            if(! in_array($assetData[$id]['asset_id'],$assetKeys))
+                                $assetKeys[] = $assetData[$id]['asset_id'];
+                        }
                         $data[$unit_no][$locidx]['highlight'] = $highlight;
                         $data[$unit_no][$locidx]['host_name'] = "";
                         $data[$unit_no][$locidx]['host_id'] = 0;
-                        
-                    } else {                        
-                        $object_data = spotEntity('object', $id); 
+
+                    } else {
+                        $object_data = spotEntity('object', $id);
                         $data[$unit_no][$locidx]['object_id'] = intval($id);
                         $data[$unit_no][$locidx]['name'] = $object_data['name'];
                         $data[$unit_no][$locidx]['label'] = $object_data['label'];
                         $data[$unit_no][$locidx]['type_id'] = intval($object_data['objtype_id']);
                         $data[$unit_no][$locidx]['type'] = decodeObjectType ($object_data['objtype_id']);
-                        $data[$unit_no][$locidx]['asset_id'] = $object_data['asset_no'];                                    
+                        $data[$unit_no][$locidx]['asset_id'] = $object_data['asset_no'];
                         $data[$unit_no][$locidx]['highlight'] = $highlight;
                         $data[$unit_no][$locidx]['host_name'] = "";
                         $data[$unit_no][$locidx]['host_id'] = 0;
-                        
+
                     }
                     //echo json_encode($object_data) . "\n";
                 } else {
@@ -253,8 +347,8 @@ class BZSpace {
                 $ret['name'] = $objData[$selectId]['object_name'];
                 $ret['label'] = $objData[$selectId]['label'];
             }
-        }   
-        
+        }
+
         $ret['asset_keys'] = $assetKeys;
         $ret['table'] = $rows;
         $percentage = ($counter['T'] + $counter['W'] + $counter['U']) / ($counter['T'] + $counter['W'] + $counter['U'] + $counter['F']);
@@ -271,7 +365,7 @@ class BZSpace {
         $ret = array();
         require_once('DALObject.php');
         $rack_data = DALObject::getObjectRackData('asset',$asset_id,TRUE);
-        //echo json_encode($rack_data) . "\n";  
+        //echo json_encode($rack_data) . "\n";
         if (! empty($rack_data)) {
             $data = BZSpace::getObjectRackDetail($rack_data);
             $ret['rack_table'] = $data;
@@ -286,8 +380,8 @@ class BZSpace {
         require_once('DALObject.php');
         $rack_data = DALObject::getObjectRackData('object',$object_id,TRUE);
         if (! empty($rack_data)) {
-            //echo json_encode($rack_data) . "\n";  
-            
+            //echo json_encode($rack_data) . "\n";
+
             $data = BZSpace::getObjectRackDetail($rack_data);
             $ret['rack_table'] = $data;
             $ret['rack_files'] = array();
@@ -301,8 +395,8 @@ class BZSpace {
         foreach($object_data as $objrack) {
             //print_r($objrack);
         //foreach (getResidentRackIDs ($object_id) as $rack_id)
-        //{            
-            if ((!empty($objrack['rack_id'])) && (!empty($objrack['object_id']))) {          
+        //{
+            if ((!empty($objrack['rack_id'])) && (!empty($objrack['object_id']))) {
                 $object_id = intval($objrack['object_id']);
                 $zerou_object = array();
                 //if ($objrack['zerou']) {
@@ -332,10 +426,10 @@ class BZSpace {
             $rackData['id'] = (isset($objrack['id']))? $objrack['id']:$objrack['object_id'];
             $rackData['id'] = intval($rackData['id']);
             $rackData['name'] = (isset($objrack['name']))? $objrack['name']:$objrack['object_name'];
-            $rackData['label'] = $objrack['label'];            
-            $rackData['type_id'] = (isset($objrack['objtype_id']))?$objrack['objtype_id']:$objrack['type_id'];            
-            $rackData['type_id'] = intval($rackData['type_id']);            
-            $rackData['type'] = decodeObjectType ($rackData['type_id']);             
+            $rackData['label'] = $objrack['label'];
+            $rackData['type_id'] = (isset($objrack['objtype_id']))?$objrack['objtype_id']:$objrack['type_id'];
+            $rackData['type_id'] = intval($rackData['type_id']);
+            $rackData['type'] = decodeObjectType ($rackData['type_id']);
             $data[] = $rackData;
         }
         return $data;
@@ -346,20 +440,20 @@ class BZSpace {
         $ret = array();
         $locationlist = listCells ('location');
         foreach ($locationlist as &$loc) {
-            $label = $loc['name'];
+            $label = htmlspecialchars_decode($loc['name']);
             $loc['label'] = $label;
             $loc['id'] = intval($loc['id']);
             $loc['parent_id'] = intval($loc['parent_id']);
             unset($loc['name']);
-            unset($loc['parent_name']);            
-            unset($loc['realm']);    
-            unset($loc['atags']);    
-            unset($loc['itags']); 
-            unset($loc['etags']); 
+            unset($loc['parent_name']);
+            unset($loc['realm']);
+            unset($loc['atags']);
+            unset($loc['itags']);
+            unset($loc['etags']);
             unset($loc['comment']);
             unset($loc['refcnt']);
         }
-        
+
         $ret = treeFromList (addTraceToNodes ($locationlist));
         //print_r();
         if (count($ret)>0) {
@@ -369,7 +463,7 @@ class BZSpace {
         }
     }
 
-    public static function get_row_list($location_ids) {    
+    public static function get_row_list($location_ids) {
         $ret = array();
         list($check,$resp) = verifyIntegerArrary($location_ids);
         if ($check) {
@@ -379,12 +473,12 @@ class BZSpace {
                     $ret[] = array('id' => intval($row['id']),'label'=> $row['name']);
                 }
             }
-        } else 
+        } else
           $ret = $resp;
         return array($check, $ret);
     }
 
-    public static function get_rack_list($row_ids) {    
+    public static function get_rack_list($row_ids) {
         $ret = array();
         list($check,$resp) = verifyIntegerArrary($row_ids);
         if ($check) {
@@ -394,12 +488,12 @@ class BZSpace {
                     $ret[] = array('id' => intval($rack['id']),'label'=> $rack['name']);
                 }
             }
-        } else 
+        } else
           $ret = $resp;
         return array($check, $ret);
     }
-    
-    public static function get_available_rack($rack_id) {    
+
+    public static function get_available_rack($rack_id) {
         $ret = array();
         if (! empty($rack_id)) {
             $ret = BZSpace::getRackDetail($rack_id);
@@ -437,7 +531,7 @@ class BZSpace {
                         } else {
                             $ret = array('check'=> true);
                         }
-                    }         
+                    }
                 } else $ret = array('check'=> false,'error'=>'Rack invalid');
             } else $ret = array('check'=> false,'error'=>'Row invalid');
         } else $ret = array('check'=> false,'error'=>'Location invalid');
