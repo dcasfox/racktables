@@ -324,7 +324,7 @@ class DALObject {
                                    'sort'=> $sort);
                     
                     if ($row['attr_type'] == 'dict') {
-                        $property['dict_id'] = $attr_vkey;
+                        $property['dict_id'] = intval($attr_vkey);
                         $property['value'] = $attr_dict_val;
                     } else {
                         $property['value'] = $attr_value;
