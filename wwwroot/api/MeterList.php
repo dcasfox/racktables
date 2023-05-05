@@ -3,12 +3,19 @@ include('common.php');
 include('BZMeterList.php');
 
 class MeterList {
-    public static function getMeterlist($args) {
-	#return array('test'=> '123');
-        $data = BZMeterList::MeterSelect();
+
+    public static function getTagsDropDownSelect($args) {
+        $data = BZMeterList::TagsDropDownSelect($args);    
         return outSuccess($data,count($data));
-        #return OutReturn($data);
+    } 
+    public static function getMeterlist($args) {
+        $data = BZMeterList::MeterSelect($args);    
+        return outSuccess($data,count($data));
+    }
+    public static function getPowerMeteritems($args) {        
+        $data = BZMeterList::PowerMeteritems($args);  
+        return outSuccess($data,count($data));
     }
 }
-//MeterSelect::getMeterSelect();
+
 ?>
