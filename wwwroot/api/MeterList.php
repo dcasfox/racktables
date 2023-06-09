@@ -16,6 +16,10 @@ class MeterList {
         $data = BZMeterList::PowerMeteritems($args);  
         return outSuccess($data,count($data));
     }
+    public static function getMetersconfig($args) {        
+        $data = BZMeterList::getMetersconfig($args);  
+        return outSuccess($data,count($data));
+    }
 }
 
 ?>

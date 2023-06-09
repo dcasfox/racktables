@@ -11,8 +11,10 @@ class BZMeterList {
     }
     public static function TagsDropDownSelect($args) {
       return  DALMeterSelect::getTagsDropDownSelect($args);
-    
+    } 
+    public static function getMetersconfig($args) {
+      return  DALMeterSelect::getMetersconfig($args);
+    } 
 
-  } 
 
 }

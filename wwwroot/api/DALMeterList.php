@@ -66,6 +66,7 @@ class DALmeterselect {
         }
     }
 
+
     function get_powerMeteritems(){
 
         $datas = array();
@@ -85,8 +86,18 @@ class DALmeterselect {
             return "Nodata";
             return $datas['message'] = 'Nodata' ;
         }
-
     }
+    function getMetersconfig($arg){
+        $sql="
+        select d.dict_value as assettype,o.name ,av.string_value  FROM  racktables.AttributeValue av 
+        left join racktables.`Object` o on o.id  = av.object_id 
+        left Join racktables.Dictionary d on d.dict_key =o.objtype_id 
+        WHERE  av.attr_id =(SELECT id from racktables.`Attribute` a  WHERE a.name ='Metrics Config')
+        and object_id in('".$arg['objectid']."')";
+        $result = usePreparedSelectBlade($sql);
+        return $result;
+    }
+
 
     function get_common_Data($token){
 
@@ -106,11 +117,9 @@ class DALmeterselect {
         $result = usePreparedSelectBlade($sql);
 
         if ($result) {
-
-                while ($row = $result->fetch(PDO::FETCH_ASSOC)){
-                    $datas[$row['name']] = $row;
-                }
-
+            while ($row = $result->fetch(PDO::FETCH_ASSOC)){
+                $datas[$row['name']] = $row;
+            }
         }
 
         if(!empty($datas)){
@@ -120,7 +129,7 @@ class DALmeterselect {
             return "Nodata";
             return $datas['message'] = 'Nodata' ;
         }
-
+        
     }
 
 
@@ -219,8 +228,6 @@ class DALmeterselect {
                         $tmp_array_down[$row['down_stream']] = array($row['item']);
                     }
 
-               // }
-                
             }
         }
             return [$tmp_array_up,$tmp_array_down];
