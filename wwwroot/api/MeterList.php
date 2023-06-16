@@ -12,6 +12,10 @@ class MeterList {
         $data = BZMeterList::MeterSelect($args);    
         return outSuccess($data,count($data));
     }
+    public static function getMeterInfo($args) {
+        $data = BZMeterList::getMeterInfo($args);    
+        return outSuccess($data,count($data));
+    }
     public static function getPowerMeteritems($args) {        
         $data = BZMeterList::PowerMeteritems($args);  
         return outSuccess($data,count($data));

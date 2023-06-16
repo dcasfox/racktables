@@ -1,5 +1,32 @@
 <?php
 class DALmeterselect {
+    function removeKeysWithUnderscore(&$array)
+    {
+        foreach ($array as $key => &$value) {
+            if (is_array($value)) {
+                removeKeysWithUnderscore($value); 
+            }
+            if (strpos($key, '_') !== false) {
+                unset($array[$key]); 
+            }
+        }
+    }
+
+    #小駝峰顯示邏輯
+    function convertKeysToCamelCase(&$array)
+    {
+        foreach ($array as $key => &$value) {
+            if (is_array($value)) {
+                convertKeysToCamelCase($value); 
+            }
+            $newKey = lcfirst(str_replace(' ', '', ucwords(str_replace('_', ' ', str_replace('.', '', $key))))); 
+            if ($newKey !== $key) {
+                $array[$newKey] = $value; 
+                unset($array[$key]);
+            }
+        }
+    }
+
     function fixArrayKey(&$arr)
     {
         $arr = array_combine(
@@ -12,7 +39,7 @@ class DALmeterselect {
             array_values($arr)
         );
     }
-
+    
     function fileter_common(){
         $datas = array();
     
@@ -86,16 +113,49 @@ class DALmeterselect {
             return "Nodata";
             return $datas['message'] = 'Nodata' ;
         }
+
     }
-    function getMetersconfig($arg){
+    function getpurpose($arg){
         $sql="
         select d.dict_value as assettype,o.name ,av.string_value  FROM  racktables.AttributeValue av 
         left join racktables.`Object` o on o.id  = av.object_id 
         left Join racktables.Dictionary d on d.dict_key =o.objtype_id 
-        WHERE  av.attr_id =(SELECT id from racktables.`Attribute` a  WHERE a.name ='Metrics Config')
-        and object_id in('".$arg['objectid']."')";
+        WHERE  av.attr_id =(SELECT id from racktables.`Attribute` a  WHERE a.name ='purpose')
+        and object_id in('".$arg['id']."')";
         $result = usePreparedSelectBlade($sql);
-        return $result;
+        $datas = [];
+
+        if ($result) {
+
+            while ($row = $result->fetch(PDO::FETCH_ASSOC)){
+                $datas[] = $row;
+            }
+
+        }
+
+        return $datas;
+    }
+
+    function getMetersconfig($arg){
+        $sql = "
+        SELECT d.dict_value AS assettype, o.name, av.string_value FROM racktables.`Object` o
+        LEFT JOIN racktables.AttributeValue av on o.id = av.object_id  
+        LEFT JOIN racktables.Dictionary d ON d.dict_key = o.objtype_id
+        WHERE av.attr_id = (
+                SELECT id FROM racktables.`Attribute` a WHERE a.name = 'Metrics Config'
+        )
+        AND object_id = :id
+        ";
+
+        $params = array('id' => $arg['id']);
+        $result = usePreparedSelectBlade($sql, $params);
+        $datas = [];
+
+        if ($result) {
+            $datas = $result->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        return $datas;
     }
 
 
@@ -111,15 +171,17 @@ class DALmeterselect {
          where dict_value = 'Power Meter' and tt.tag ='".$token."'
         
         " ;
-        //return $sql;
+        #return $sql;
         
         //$result = mysqli_query($link,$sql);
         $result = usePreparedSelectBlade($sql);
 
         if ($result) {
-            while ($row = $result->fetch(PDO::FETCH_ASSOC)){
-                $datas[$row['name']] = $row;
-            }
+
+                while ($row = $result->fetch(PDO::FETCH_ASSOC)){
+                    $datas[$row['name']] = $row;
+                }
+
         }
 
         if(!empty($datas)){
@@ -129,7 +191,7 @@ class DALmeterselect {
             return "Nodata";
             return $datas['message'] = 'Nodata' ;
         }
-        
+
     }
 
 
@@ -228,6 +290,8 @@ class DALmeterselect {
                         $tmp_array_down[$row['down_stream']] = array($row['item']);
                     }
 
+               // }
+                
             }
         }
             return [$tmp_array_up,$tmp_array_down];
@@ -342,6 +406,142 @@ class DALmeterselect {
             return $tmp_array_up;
     }
 
+    function getMeterList($token,$filter_tag,$filter_condition,$hosttagMap,$powermeteritmes){      
+
+        $where_condition ="";           
+        $where_condition_array = array();     
+        $count = 0;
+        if (isset($filter_condition["WhereConditions"])){
+            if (isset($filter_condition['Method'])){
+                if ($filter_condition['Method'] == 'equal'){
+                        foreach ($filter_condition['WhereConditions'] as &$value) {
+                            $count = $count+1;
+                            $d =  array_keys($filter_condition['WhereConditions'],$value)[0];
+                            $where_condition = "Attrrbute_Name = '".$d ."' and string_value in ('";
+                            $where_condition  =$where_condition .implode("','",$filter_condition['WhereConditions'][$d])."')";
+                            array_push($where_condition_array,$where_condition);
+                        }
+                        $where_condition =  "where ". implode(' or ',$where_condition_array) . " GROUP  by name having count(*)>=".$count;
+                    }
+
+                elseif($filter_condition['Method'] == 'like'){
+
+                        foreach ($filter_condition['WhereConditions'] as &$value) {
+                            $count = $count+1;
+                            $d =  array_keys($filter_condition['WhereConditions'],$value)[0];
+                            $where_condition = "Attrrbute_Name like '".$d ."' and string_value like '%";
+                            $where_condition  =$where_condition .implode("%' or Attrrbute_Name like '".$d. "' and string_value like '%",$filter_condition['WhereConditions'][$d])."%' ";
+                            array_push($where_condition_array,$where_condition);
+                        }
+                    }
+
+                else{
+                    return $filter_condition['Method']." not support";
+                }
+                $where_condition =  "where ". implode(' or ',$where_condition_array) . " GROUP  by name having count(*)>=".$count;
+            }
+            else{
+                if (isset($filter_condition['WhereConditions'])==TRUE){
+
+                foreach ($filter_condition['WhereConditions'] as &$value) {
+                    if ($value['Method']  == 'equal'){
+                            $count = $count+1;
+                            $d =  array_keys($filter_condition['WhereConditions'],$value)[0];
+                            $where_condition = "Attrrbute_Name = '".$d ."' and string_value in ('";
+                            $where_condition  =$where_condition .implode("','",$filter_condition['WhereConditions'][$d]['Value'])."')";
+                            array_push($where_condition_array,$where_condition);
+                        }
+                        if($value['Method'] == 'like'){
+                            $count = $count+1;
+                            $d =  array_keys($filter_condition['WhereConditions'],$value)[0];
+                            $where_condition = "Attrrbute_Name like '".$d ."' and string_value like '%";
+                            $where_condition  = $where_condition .implode("%' or Attrrbute_Name like '".$d. "' and string_value like '%",$filter_condition['WhereConditions'][$d]['Value'])."%' ";
+                            array_push($where_condition_array,$where_condition);
+                        }
+                    }
+                }
+            }
+        }
+        else{
+            $where_condition = "";
+        }
+        if ($count <>0){
+            $where_condition =  "where ". implode(' or ',$where_condition_array) . " GROUP  by name having count(*)>=".$count;
+        }  
+        $all = array();
+        $item_host_map = array();
+        $datas_common = DALmeterselect::get_common_Data($token);    
+        $datas = DALmeterselect::get_extend_Data($where_condition); 
+        $down_stream_ =DALmeterselect::down_stream();                                                                                                                               
+        $up_stream_ =DALmeterselect::up_stream();  
+        #return $datas_common;                                                                                                                                                      
+        foreach ($datas as $key => $value){     
+            if (!in_array($key, $powermeteritmes)){
+               continue;
+            }                                                                                                                             
+            $arr = array();                                                                                                                                                         
+            $arr_up = array();                                                                                                                                                      
+            if (array_key_exists($key,$down_stream_)){                                                                                                                              
+                //                                                                                                                                                                  
+                $arr = array(                                                                                                                                                       
+                    'Downstream'  =>  $down_stream_[$key]                                                                                                                               
+                );                                                                                                                                                                  
+            }                                                                                                                                                                       
+            else{                                                                                                                                                                   
+                $arr = array(                                                                                                                                                       
+                    'Downstream'  => []                                                                                                                                             
+                );                                                                                                                                                                  
+            }                                                                                                                                                                       
+                                                                                                                                                                                    
+            if (array_key_exists($key,$up_stream_)){                                                                                                                                
+                $arr_up = array(                                                                                                                                                    
+                'Upstream'  =>  $up_stream_[$key]                                                                                                                                   
+                );                                                                                                                                                                  
+            }                                                                                                                                                                       
+            else{                                                                                                                                                                   
+                $arr_up = array( 
+                'Upstream'  => []                                                                                                                                               
+                );                                                                                                                                                                  
+            }                                                                                                                                                                       
+                                                                                                                                                                                    
+            $a = array_map('trim', array_keys($datas[$key]));                                                                                                                       
+            $b = array_map('trim', $datas[$key]);                                                                                                                                   
+            $datas[$key] = array_combine($a, $b);                                                                                                                             
+                                                              
+            
+            if (array_key_exists('Metrics Config',$datas[$key])){    
+                                                                                                                                                                                    
+                $metrics = json_decode($datas[$key]['Metrics Config'],true);                                                                                                        
+                $datas[$key]['Metrics Config'] = $metrics;                                                                                                                          
+          
+                $purpose = $datas[$key]['Purpose'];   
+                unset($datas[$key]['Purpose']);                                                                                                      
+                if  (array_key_exists($filter_tag,$metrics['Power'])){                                                                                                              
+                    array_push($item_host_map,array('host'=>$key,'item'=> $metrics['Power'][$filter_tag][0]));                                                                      
+                    $mag[$key]=array(                                                                                                                                               
+                        'Name' =>$datas_common[$key]['name'],                                                                                                                       
+                        'Description' =>$purpose,                                                                                                                
+                        'Hosttag' =>$hosttagMap[$key],                                                                                                                            
+                        'AssetAtrributes' =>$datas[$key]                                                                                                                            
+                    );                                                                                                                                                              
+                                                                                                                                                                                    
+                    unset($mag[$key]['tags']['Description']);   
+                                                                                                                                                                                                                                                                                        
+                    $merge  = array_merge($mag[$key],$arr_up,$arr);                                                                                                                 
+                    DALmeterselect::fixArrayKey($merge);                                                                                                                                                                                                                                                                                    
+                    array_push($all,$merge);                                                                                                                                        
+               }                                                                                                                                                                    
+            }                                                                                                                                                                       
+       }
+        $outputarray = array('Config' => $all,'ItemName' =>$item_host_map);                                                                                                         
+        DALmeterselect::fixArrayKey($outputarray);                                                                                                                                  
+        return $outputarray;                                                                                                                                                        
+    }
+
+    #function getMeterInfo
+    #hosttag -> tags 
+    #rm -f assetatrributes
+
    function getMeterInfo($token,$filter_tag,$filter_condition,$hosttagMap,$powermeteritmes){      
 
         $where_condition ="";           
@@ -410,7 +610,7 @@ class DALmeterselect {
         $datas = DALmeterselect::get_extend_Data($where_condition); 
         $down_stream_ =DALmeterselect::down_stream();                                                                                                                               
         $up_stream_ =DALmeterselect::up_stream();  
-                                                                                                                                                             
+        #return $datas_common;                                                                                                                                                      
         foreach ($datas as $key => $value){     
             if (!in_array($key, $powermeteritmes)){
                continue;
@@ -443,22 +643,30 @@ class DALmeterselect {
             $a = array_map('trim', array_keys($datas[$key]));                                                                                                                       
             $b = array_map('trim', $datas[$key]);                                                                                                                                   
             $datas[$key] = array_combine($a, $b);                                                                                                                             
-                                                                                                                                                          
+                                                              
+            
             if (array_key_exists('Metrics Config',$datas[$key])){    
-
                                                                                                                                                                                     
                 $metrics = json_decode($datas[$key]['Metrics Config'],true);                                                                                                        
-                $datas[$key]['Metrics Config'] = $metrics;                                                                                                                          
-          
+                $datas[$key]['Metrics Config'] = $metrics; 
+               
                 $purpose = $datas[$key]['Purpose'];   
                 unset($datas[$key]['Purpose']);                                                                                                      
-                if  (array_key_exists($filter_tag,$metrics['Power'])){                                                                                                              
+                if  (array_key_exists($filter_tag,$metrics['Power'])){     
+                    unset($datas[$key]['Metrics Config']);         
+                    #DALmeterselect::fixArrayKey($hosttagMap[$key]); 
+                    #DALmeterselect::convertKeysToCamelCase($datas[$key]);         
+                    #DALmeterselect::fixArrayKey($datas[$key]);      
+                    self::removeKeysWithUnderscore($hosttagMap[$key]);
+                    if (!isset($hosttagMap[$key]))$hosttagMap[$key] =[];
+                                                                                                                         
+                                                                                                                   
                     array_push($item_host_map,array('host'=>$key,'item'=> $metrics['Power'][$filter_tag][0]));                                                                      
                     $mag[$key]=array(                                                                                                                                               
                         'Name' =>$datas_common[$key]['name'],                                                                                                                       
                         'Description' =>$purpose,                                                                                                                
-                        'Hosttag' =>$hosttagMap[$key],                                                                                                                            
-                        'AssetAtrributes' =>$datas[$key]                                                                                                                            
+                        'tags' =>array("zabbix"=> $hosttagMap[$key],"asset" =>$datas[$key])                                                                                                                            
+                     #  'AssetAtrributes' =>$datas[$key]                                                                                                                            
                     );                                                                                                                                                              
                                                                                                                                                                                     
                     unset($mag[$key]['tags']['Description']);   
@@ -469,6 +677,7 @@ class DALmeterselect {
                }                                                                                                                                                                    
             }                                                                                                                                                                       
        }
+        DALmeterselect::fixArrayKey($all);        
         $outputarray = array('Config' => $all,'ItemName' =>$item_host_map);                                                                                                         
         DALmeterselect::fixArrayKey($outputarray);                                                                                                                                  
         return $outputarray;                                                                                                                                                        
@@ -477,4 +686,3 @@ class DALmeterselect {
 }
 
 ?>
-
