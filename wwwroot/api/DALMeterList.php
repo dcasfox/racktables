@@ -138,7 +138,7 @@ class DALmeterselect {
 
     function getMetersconfig($arg){
         $sql = "
-        SELECT d.dict_value AS assettype, o.name, av.string_value FROM racktables.`Object` o
+        SELECT d.dict_value AS assettype, o.name,o.asset_no, av.string_value FROM racktables.`Object` o
         LEFT JOIN racktables.AttributeValue av on o.id = av.object_id  
         LEFT JOIN racktables.Dictionary d ON d.dict_key = o.objtype_id
         WHERE av.attr_id = (
@@ -519,7 +519,7 @@ class DALmeterselect {
                 if  (array_key_exists($filter_tag,$metrics['Power'])){                                                                                                              
                     array_push($item_host_map,array('host'=>$key,'item'=> $metrics['Power'][$filter_tag][0]));                                                                      
                     $mag[$key]=array(                                                                                                                                               
-                        'Name' =>$datas_common[$key]['name'],                                                                                                                       
+                        'Name' =>$datas_common[$key]['name'],
                         'Description' =>$purpose,                                                                                                                
                         'Hosttag' =>$hosttagMap[$key],                                                                                                                            
                         'AssetAtrributes' =>$datas[$key]                                                                                                                            
