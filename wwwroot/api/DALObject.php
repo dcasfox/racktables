@@ -1044,22 +1044,47 @@ class DALObject {
          * 2024.04.10 Terry Modify
          * AttributeExtend 擴充欄位 `i18nEnable`
          * 如果`i18nEnable`的值為Y回傳TRUE，否則回傳FALSE
+         * 
+         * 2024.04.11 Terry Modify
+         * 為了配合by group需求，修改SQL取得 `obj_type` 和 `group`
          */
+
         $ret = ($has_dict)?array('attributes'=>array(),'dicts'=>array()) : array();
 
         $result = usePreparedSelectBlade ("SELECT
-                                            A.id,
-                                            A.`type`,
-                                            A.name,
-                                            AM.chapter_id,
-                                            CASE
-                                                WHEN AE.i18nEnable = 'Y' THEN TRUE
-                                                ELSE FALSE
-                                            END AS i18nEnable
-                                        FROM AttributeMap AS AM
-                                        LEFT JOIN Attribute AS A ON AM.attr_id = A.id
-                                        LEFT JOIN AttributeExtend AS AE ON A.name = AE.name
-                                        WHERE AM.objtype_id = {$objtype_id} AND A.id != 2");
+                                               A.id,
+                                               A.`type`,
+                                               A.name,
+                                               AM.chapter_id,
+                                               OBJT.obj_type AS `object_type`,
+                                               CASE
+                                                   WHEN AE.i18nEnable = 'Y' THEN TRUE
+                                                   ELSE FALSE
+                                               END AS i18nEnable,
+                                            	IFNULL(AE.`group`, OBJT.obj_type) AS `group`
+                                           FROM 
+                                               AttributeMap AS AM
+                                           LEFT JOIN 
+                                               Attribute AS A ON AM.attr_id = A.id
+                                           LEFT JOIN 
+                                               (
+                                                   SELECT 
+                                               		DISTINCT(O.objtype_id), 
+                                                       D.dict_value AS obj_type 
+                                                   FROM 
+                                                       RackObject AS O  
+                                                   LEFT JOIN 
+                                                       Dictionary AS D ON O.objtype_id = D.dict_key  
+                                                   LEFT JOIN 
+                                                       Chapter AS C ON D.chapter_id = C.id 
+                                                   WHERE 
+                                                       C.name = 'ObjectType'
+                                               ) AS OBJT ON OBJT.objtype_id = AM.objtype_id
+                                           LEFT JOIN 
+                                               AttributeExtend AS AE ON A.name = AE.name
+                                           WHERE 
+                                               AM.objtype_id = {$objtype_id} 
+                                               AND A.id != 2;");
 
         while ($row = $result->fetch (PDO::FETCH_ASSOC))
         {

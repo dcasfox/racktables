@@ -850,10 +850,14 @@ class BZObject {
         return array(True, $ret);
     }
 
-    public static function get_objtype_attributes($objtype_id) {
+    /*
+     * 2024.04.11 Terry Modify
+     * Message: 添加一個參數，如果有帶 `byGroup` 這個參數，代表需要群組
+     */
+    public static function get_objtype_attributes($objtype_id, $byGroup) {
         //$ret = getObjTypeAttrMap(intval($objtype_id));
         $ret = array();
-        $data = DALObject::getObjectAttrs(intval($objtype_id),true);
+        $data = DALObject::getObjectAttrs(intval($objtype_id),true, $byGroup);
         if (! empty($data['dicts'])) {
             $arrIds = array_keys($data['dicts']);
             $arrIds = array_filter($arrIds);
@@ -867,7 +871,32 @@ class BZObject {
                 }
             }
         }
-        $ret = array_values($data['attributes']);
+        if($byGroup) {
+            // 根據 group 分組屬性
+            $groupedAttributes = [];
+                
+            foreach ($data['attributes'] as $attribute) {
+                if (isset($attribute['group'])) {
+                    $groupName = $attribute['group'];
+                    unset($attribute['group']);
+                    
+                    if (!isset($groupedAttributes[$groupName])) {
+                        $groupedAttributes[$groupName] = [
+                            'group' => $groupName,
+                            'attributes' => []
+                        ];
+                    }
+                    
+                    $groupedAttributes[$groupName]['attributes'][] = $attribute;
+                }
+            }
+        
+            // 將組屬性轉換為數組並添加到 $ret
+            foreach ($groupedAttributes as $group) {
+                $ret[] = $group;
+            }
+        } else
+            $ret = array_values($data['attributes']);
 
         return array(True, array_values($ret));
 

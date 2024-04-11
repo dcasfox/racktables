@@ -108,13 +108,18 @@ class Objects {
         }
     }
 
+    /*
+     * 2024.04.11 Terry Modify
+     * Message: 添加一個參數，如果有帶 `byGroup` 這個參數，代表需要群組
+     */ 
     public static function get_objtype_attributes($args,$path_params) {
         $objtype_id = NULL;
+        $byGroup = isset($args['byGroup']);
         if (! empty($path_params))
             $objtype_id = $path_params;
         else 
             $objtype_id = $args['objtype_id'];
-        list($success,$data) = BZObject::get_objtype_attributes($objtype_id);
+        list($success,$data) = BZObject::get_objtype_attributes($objtype_id, $byGroup);
         if ($success) {
             return outSuccess($data,count($data));
         } else {
