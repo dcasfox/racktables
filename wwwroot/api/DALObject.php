@@ -243,19 +243,48 @@ class DALObject {
 
     public static function getObjectPropertys($objectIds,$assoc_key=FALSE)
     {
+        /*
+         * 2024.04.10 Terry Modify
+         * AttributeExtend 擴充欄位 `i18nEnable`
+         * 如果`i18nEnable`的值為Y回傳TRUE，否則回傳FALSE
+         */
         $ret = array();
-        $result = usePreparedSelectBlade ("SELECT O.id AS `object_id`,O.objtype_id, OBJT.obj_type AS `type`,O.name,O.label,O.asset_no,O.has_problems,A.id AS attr_id, A.name AS attr_name, A.type AS attr_type, C.name AS chapter_name,
-                                                    C.id AS chapter_id, AV.uint_value, AV.float_value, AV.string_value, D.dict_value,AE.`group`,AE.sort,TAGS.id AS tag_id,TAGS.tag AS tag_name FROM `Object` AS O
-                                           LEFT JOIN AttributeMap AS AM ON O.objtype_id = AM.objtype_id
-                                           LEFT JOIN Attribute AS A ON AM.attr_id = A.id
-                                           LEFT JOIN AttributeValue AS AV ON AV.attr_id = AM.attr_id AND AV.object_id = O.id
-                                           LEFT JOIN Dictionary AS D ON D.dict_key = AV.uint_value AND AM.chapter_id = D.chapter_id
-                                           LEFT JOIN Chapter AS C ON AM.chapter_id = C.id
-                                           LEFT JOIN (SELECT TS.entity_id, TT.id, TT.tag FROM TagStorage AS TS INNER JOIN TagTree AS TT ON TS.tag_id = TT.id  WHERE TS.entity_realm = 'object') AS TAGS ON TAGS.entity_id = O.id
-                                           LEFT JOIN (SELECT O.id, D.dict_value AS obj_type FROM RackObject AS O  LEFT JOIN Dictionary AS D ON  O.objtype_id = D.dict_key  LEFT JOIN Chapter AS C ON D.chapter_id = C.id WHERE C.name = 'ObjectType') AS OBJT ON OBJT.id = O.id
-                                           LEFT JOIN AttributeExtend AS AE ON A.`name` = AE.`name`
-                                           WHERE O.id IN ({$objectIds})
-                                           ORDER BY O.id,AE.`group`,AE.sort ASC");
+        $result = usePreparedSelectBlade ("SELECT
+                                                    O.id AS `object_id`,
+                                                    O.objtype_id,
+                                                    OBJT.obj_type AS `type`,
+                                                    O.name,
+                                                    O.label,
+                                                    O.asset_no,
+                                                    O.has_problems,
+                                                    A.id AS attr_id,
+                                                    A.name AS attr_name,
+                                                    A.type AS attr_type,
+                                                    C.name AS chapter_name,
+                                                    C.id AS chapter_id,
+                                                    AV.uint_value,
+                                                    AV.float_value,
+                                                    AV.string_value,
+                                                    D.dict_value,
+                                                    AE.`group`,
+                                                    CASE
+                                                        WHEN AE.i18nEnable = 'Y' THEN TRUE
+                                                        ELSE FALSE
+                                                    END AS i18nEnable,
+                                                    AE.sort,
+                                                    TAGS.id AS tag_id,
+                                                    TAGS.tag AS tag_name
+                                                FROM `Object` AS O
+                                                LEFT JOIN AttributeMap AS AM ON O.objtype_id = AM.objtype_id
+                                                LEFT JOIN Attribute AS A ON AM.attr_id = A.id
+                                                LEFT JOIN AttributeValue AS AV ON AV.attr_id = AM.attr_id AND AV.object_id = O.id
+                                                LEFT JOIN Dictionary AS D ON D.dict_key = AV.uint_value AND AM.chapter_id = D.chapter_id
+                                                LEFT JOIN Chapter AS C ON AM.chapter_id = C.id
+                                                LEFT JOIN (SELECT TS.entity_id, TT.id, TT.tag FROM TagStorage AS TS INNER JOIN TagTree AS TT ON TS.tag_id = TT.id  WHERE TS.entity_realm = 'object') AS TAGS ON TAGS.entity_id = O.id
+                                                LEFT JOIN (SELECT O.id, D.dict_value AS obj_type FROM RackObject AS O  LEFT JOIN Dictionary AS D ON  O.objtype_id = D.dict_key  LEFT JOIN Chapter AS C ON D.chapter_id = C.id WHERE C.name = 'ObjectType') AS OBJT ON OBJT.id = O.id
+                                                LEFT JOIN AttributeExtend AS AE ON A.`name` = AE.`name`
+                                                WHERE O.id IN ({$objectIds})
+                                                ORDER BY O.id,AE.`group`,AE.sort ASC");
         $dict_key = array();
         $dict_prop = array();
         $dict_tag = array();
@@ -264,6 +293,7 @@ class DALObject {
         {
 
             $group = (empty($row['group']))? $row['type']:$row['group'];
+            $i18nEnable = $row['i18nEnable'] == "1";
             $sort = $row['sort'];
             $attr_vkey = (empty($row['uint_value']))? NULL:$row['uint_value'];
             $oid = $row['object_id'];
@@ -330,7 +360,8 @@ class DALObject {
                     $property = array('id'=> intval($attr_id),
                                    'name'=> $attr_name,
                                    'type' => $row['attr_type'],
-                                   'sort'=> $sort);
+                                   'sort'=> $sort,
+                                   'i18nEnable'=>$i18nEnable);
 
                     if ($row['attr_type'] == 'dict') {
                         $property['dict_id'] = intval($attr_vkey);
@@ -1009,17 +1040,32 @@ class DALObject {
 
     public static function getObjectAttrs($objtype_id,$has_dict=False)
     {
+        /*
+         * 2024.04.10 Terry Modify
+         * AttributeExtend 擴充欄位 `i18nEnable`
+         * 如果`i18nEnable`的值為Y回傳TRUE，否則回傳FALSE
+         */
         $ret = ($has_dict)?array('attributes'=>array(),'dicts'=>array()) : array();
 
-        $result = usePreparedSelectBlade ("SELECT A.id,A.`type`,A.name,AM.chapter_id FROM AttributeMap AS AM
-                                           LEFT JOIN Attribute AS A ON AM.attr_id = A.id
-                                           WHERE AM.objtype_id = {$objtype_id} AND A.id != 2");
+        $result = usePreparedSelectBlade ("SELECT
+                                            A.id,
+                                            A.`type`,
+                                            A.name,
+                                            AM.chapter_id,
+                                            CASE
+                                                WHEN AE.i18nEnable = 'Y' THEN TRUE
+                                                ELSE FALSE
+                                            END AS i18nEnable
+                                        FROM AttributeMap AS AM
+                                        LEFT JOIN Attribute AS A ON AM.attr_id = A.id
+                                        LEFT JOIN AttributeExtend AS AE ON A.name = AE.name
+                                        WHERE AM.objtype_id = {$objtype_id} AND A.id != 2");
 
         while ($row = $result->fetch (PDO::FETCH_ASSOC))
         {
-
             $id = $row['id'];
             $row['id'] = intval($id);
+            $row['i18nEnable'] = $row['i18nEnable'] == "1";
             if ($has_dict) {
                 if ($row['type'] == 'dict') {
                     $ret['dicts'][$row['chapter_id']] = $id;
