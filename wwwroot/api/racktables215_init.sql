@@ -84,7 +84,8 @@ CREATE TABLE `AttributeExtend` (
   `required` enum('Y','N') DEFAULT NULL,
   `group` varchar(128) DEFAULT NULL COMMENT 'main group',
   `sub_group` varchar(128) DEFAULT NULL COMMENT 'sub group',
-  `sort` tinyint(3) unsigned DEFAULT NULL
+  `sort` tinyint(3) unsigned DEFAULT NULL,
+	`i18nEnable` ENUM('Y','N') NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -94,7 +95,22 @@ CREATE TABLE `AttributeExtend` (
 
 LOCK TABLES `AttributeExtend` WRITE;
 /*!40000 ALTER TABLE `AttributeExtend` DISABLE KEYS */;
-INSERT INTO `AttributeExtend` VALUES ('HW type','Y','System',NULL,2),('Manufacturer','N','Common',NULL,1),('Model','N','Common',NULL,2),('Company ID','N','Common',NULL,3),('Custodian Dept.','N','Common',NULL,4),('Custodian','N','Common',NULL,5),('Custodian EID','N','Common',NULL,6),('Stock Date','N','Common',NULL,7),('Project','N','Common',NULL,8),('Purpose','N','Common',NULL,9),('Status','N','Common',NULL,11),('Metrics Config','N','Power',NULL,12),('PurposeEng','N','Common',NULL,10);
+INSERT INTO AttributeExtend VALUES ('HW type', 'Y', 'System', NULL, 2, 'N'),
+    ('Manufacturer', 'N', 'Common', NULL, 1, 'N'),
+    ('Model', 'N', 'Common', NULL, 2, 'N'),
+    ('Company ID', 'N', 'Common', NULL, 3, 'N'),
+    ('Custodian Dept.', 'N', 'Common', NULL, 4, 'N'),
+    ('Custodian', 'N', 'Common', NULL, 5, 'N'),
+    ('Custodian EID', 'N', 'Common', NULL, 6, 'N'),
+    ('Stock Date', 'N', 'Common', NULL, 7, 'N'),
+    ('Project', 'N', 'Common', NULL, 8, 'N'),
+    ('Purpose', 'N', 'Common', NULL, 9, 'Y'),
+    ('Status', 'N', 'Common', NULL, 10, 'N'),
+    ('Metrics Config', 'N', 'Power', NULL, 11, 'N'),
+    ('Usage Area', 'N', 'Energy Usage', NULL, 3, 'Y'),
+    ('Usage Floor', 'N', 'Energy Usage', NULL, 2, 'Y'),
+    ('Usage System', 'N', 'Energy Usage', NULL, 1, 'Y');
+
 /*!40000 ALTER TABLE `AttributeExtend` ENABLE KEYS */;
 UNLOCK TABLES;
 
